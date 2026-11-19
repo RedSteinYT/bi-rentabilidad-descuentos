@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Modelo de Riesgo de Pérdida</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Concepto: entregable de consultoría analítica. Portada azul marino con la tesis y su gráfico, índice fijo, secciones tipo informe con gráficos propios. Paleta del tablero de Power BI del proyecto. */
+:root{
+  --bg:#F2F4F8; --surface:#FFFFFF; --sunk:#E9EDF3; --fg:#121A26; --fg2:#4C586A; --fg3:#7A8597; --line:#DCE2EB;
+  --navy:#12355B; --navy2:#0D2845; --on-navy:#FFFFFF; --on-navy2:#B9C8DB; --navy-line:#2B4C74;
+  --teal:#2A9D8F; --teal-soft:#D5EEEA; --orange:#E08A3C; --orange-soft:#FBE7D3; --coral:#D9573A; --coral-soft:#F8DCD4;
+  --f-disp:"Archivo","IBM Plex Sans",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A111B; --surface:#121C2A; --sunk:#0E1723; --fg:#E7ECF3; --fg2:#A6B2C3; --fg3:#7C899C; --line:#243346;
+  --navy:#0F2B4A; --navy2:#0A2039; --on-navy:#FFFFFF; --on-navy2:#AFC0D6; --navy-line:#294A70;
+  --teal:#3EC1B1; --teal-soft:#123A38; --orange:#F2A25A; --orange-soft:#3D2A17; --coral:#F07C62; --coral-soft:#42211B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A111B; --surface:#121C2A; --sunk:#0E1723; --fg:#E7ECF3; --fg2:#A6B2C3; --fg3:#7C899C; --line:#243346;
+  --navy:#0F2B4A; --navy2:#0A2039; --on-navy:#FFFFFF; --on-navy2:#AFC0D6; --navy-line:#294A70;
+  --teal:#3EC1B1; --teal-soft:#123A38; --orange:#F2A25A; --orange-soft:#3D2A17; --coral:#F07C62; --coral-soft:#42211B; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:72px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15.5px;line-height:1.6;margin:0;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--navy2)}
+.g{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.in{max-width:1180px;margin:0 auto}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:4px}
+
+/* barra superior */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--navy2);color:var(--on-navy);border-bottom:1px solid var(--navy-line)}
+.top .in{display:flex;align-items:center;gap:18px;height:56px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-disp);font-weight:700;font-size:15px;white-space:nowrap;text-decoration:none}
+.mark{width:26px;height:26px;border-radius:6px;background:var(--teal);display:grid;place-items:center;font-size:12px;font-weight:800;color:#06221F}
+.nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-left:auto;min-width:0}
+.nav::-webkit-scrollbar{display:none}
+.nav a{font-size:13px;color:var(--on-navy2);text-decoration:none;padding:6px 10px;border-radius:6px;white-space:nowrap}
+.nav a:hover{color:var(--on-navy);background:rgba(255,255,255,.07)}
+.nav a.on{color:var(--on-navy);background:rgba(255,255,255,.12)}
+
+/* portada */
+.hero{background:var(--navy);color:var(--on-navy)}
+.hero .hg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:40px;padding-block:46px 30px;align-items:center}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--on-navy2);margin:0 0 14px}
+.hero h1{font-family:var(--f-disp);font-stretch:88%;font-weight:800;font-size:clamp(34px,5.2vw,58px);line-height:1.02;letter-spacing:-.01em;margin:0 0 16px;text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--teal)}
+.hero .dek{font-size:17px;color:var(--on-navy2);max-width:52ch;margin:0}
+.hchart{background:rgba(255,255,255,.04);border:1px solid var(--navy-line);border-radius:var(--r);padding:16px 14px 8px}
+.hchart .cap{font-size:12.5px;color:var(--on-navy2);margin:0 4px 6px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hchart svg text{fill:var(--on-navy2)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--navy-line)}
+.kpi{padding:18px 18px 22px 0;min-width:0}
+.kpi+.kpi{padding-left:18px;border-left:1px solid var(--navy-line)}
+.kpi .v{font-family:var(--f-disp);font-stretch:82%;font-weight:700;font-size:clamp(24px,3vw,34px);line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12.5px;color:var(--on-navy2);margin-top:4px}
+
+/* cuerpo */
+main .in{display:flex;flex-direction:column;gap:20px;padding-block:28px 48px}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px clamp(18px,3vw,36px)}
+.sh{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;align-items:baseline;margin-bottom:14px}
+.sn{font-family:var(--f-mono);font-size:12px;color:var(--teal);letter-spacing:.06em;grid-row:span 2;padding-top:6px}
+h2{font-family:var(--f-disp);font-stretch:92%;font-weight:700;font-size:clamp(22px,2.6vw,28px);line-height:1.15;margin:0;text-wrap:balance}
+.sh p{grid-column:2;margin:4px 0 0;color:var(--fg2);max-width:70ch}
+h3{font-family:var(--f-disp);font-weight:650;font-size:16.5px;margin:0 0 8px}
+p{margin:10px 0;max-width:72ch}
+.note{font-size:13px;color:var(--fg2)}
+.lbl{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* resumen */
+.exec{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.1fr);gap:0}
+.ef{padding:4px 22px 4px 0;min-width:0}
+.ef+.ef{padding-left:22px;border-left:1px solid var(--line)}
+.ef .big{font-family:var(--f-disp);font-stretch:82%;font-weight:700;font-size:34px;line-height:1;margin:8px 0 8px;font-variant-numeric:tabular-nums}
+.ef p{font-size:14.5px;margin:0}
+.reco{background:var(--sunk);border-radius:10px;padding:18px 20px;margin-left:22px}
+.reco ol{margin:8px 0 0;padding-left:20px;font-size:14.5px;display:grid;gap:8px}
+
+/* arquitectura */
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:6px;align-items:stretch}
+.node{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface);position:relative;min-width:0}
+.node .t{font-family:var(--f-disp);font-weight:650;font-size:14.5px;line-height:1.25;overflow-wrap:anywhere}
+.node .d{font-size:12.5px;color:var(--fg2);margin-top:4px}
+.node .k{font-family:var(--f-mono);font-size:11px;color:var(--fg3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.node.out{border-style:dashed}
+.node.me{background:var(--navy);border-color:var(--navy);color:var(--on-navy)}
+.node.me .d,.node.me .k{color:var(--on-navy2)}
+.arrow{position:absolute;right:-10px;top:50%;width:10px;height:2px;background:var(--line)}
+.branch{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:10px}
+.branch .sp{grid-column:span 2}
+.bl{font-size:12.5px;color:var(--fg2);align-self:center;text-align:right;padding-right:6px}
+
+/* tablas */
+.tw{overflow-x:auto;margin-top:12px;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:10px 14px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tbody tr:last-child td{border-bottom:0}
+thead th{font-family:var(--f-mono);font-weight:500;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--fg2);background:var(--sunk);white-space:normal;vertical-align:bottom;line-height:1.35}
+td.m{font-family:var(--f-mono);font-size:13.5px}
+tr.base td{background:color-mix(in srgb,var(--teal) 8%,transparent)}
+.best{color:var(--teal);font-weight:600}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:11px;padding:2px 7px;border-radius:99px;background:var(--sunk);color:var(--fg2);margin-left:6px;vertical-align:1px}
+
+/* gráficos */
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--f-mono);font-size:11px;fill:var(--fg2)}
+.gl{stroke:var(--line);stroke-width:1}
+.gz{stroke:var(--fg3);stroke-width:1}
+.two{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:32px;align-items:start}
+.two.eq{grid-template-columns:repeat(2,minmax(0,1fr))}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--fg2);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+/* importancia */
+.imp{display:grid;gap:10px;margin-top:10px}
+.irow{display:grid;grid-template-columns:100px minmax(0,1fr) 46px;gap:10px;align-items:center;font-size:13.5px}
+.itr{height:10px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.ifl{height:100%;background:var(--teal);border-radius:99px}
+.irow .num{font-size:12px;color:var(--fg2);text-align:right}
+
+/* mapa de calor */
+.heat{border-collapse:separate;border-spacing:3px;font-size:12.5px}
+.heat th,.heat td{border:0;padding:7px 6px;text-align:center}
+.heat thead th{background:transparent;padding-bottom:4px}
+.heat td:first-child,.heat th:first-child{text-align:left;padding-left:2px;font-family:var(--f-body);font-size:13.5px;color:var(--fg)}
+.heat td.c{font-family:var(--f-mono);border-radius:5px;cursor:default;min-width:54px}
+.heat td.na{color:var(--fg3)}
+.heatwrap{border:0;margin-top:8px}
+.hinfo{font-size:13px;color:var(--fg2);min-height:21px;margin-top:8px}
+.scale{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg2)}
+.scale .bar{width:160px;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--surface),var(--coral))}
+.scale .bar{border:1px solid var(--line)}
+
+/* límites */
+.caps{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:12px}
+.capc{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center}
+.capc .n{font-weight:600;font-size:14.5px}
+.capc .s{font-size:12px;color:var(--fg2);grid-column:1}
+.chip{font-family:var(--f-mono);font-size:13px;font-weight:500;padding:4px 10px;border-radius:99px;grid-row:span 2;white-space:nowrap}
+.chip.ok{background:var(--teal-soft);color:var(--teal)}
+.chip.mid{background:var(--orange-soft);color:var(--orange)}
+.chip.bad{background:var(--coral-soft);color:var(--coral)}
+
+/* simulador */
+.simw{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:28px;align-items:start}
+.ctl label{display:block;font-size:12.5px;color:var(--fg2);margin:14px 0 6px}
+.ctl label:first-child{margin-top:0}
+select{width:100%;font:inherit;font-size:14.5px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.rng{display:flex;align-items:center;gap:12px}
+.rng output{font-family:var(--f-mono);font-size:15px;min-width:48px;text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:6px;border-radius:99px;background:var(--sunk);border:1px solid var(--line);margin:10px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--teal)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid var(--surface)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.presets button{font:inherit;font-size:12.5px;padding:6px 10px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.presets button:hover{border-color:var(--teal);color:var(--teal)}
+.res{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:24px;align-items:center}
+.gauge{position:relative}
+.gauge .val{position:absolute;left:0;right:0;bottom:6px;text-align:center}
+.gauge .pv{font-family:var(--f-disp);font-stretch:82%;font-weight:700;font-size:44px;line-height:1}
+.gauge .pl{font-size:12.5px;font-weight:600;margin-top:2px}
+.arcbg{fill:none;stroke:var(--sunk);stroke-width:18;stroke-linecap:round}
+.arcv{fill:none;stroke-width:18;stroke-linecap:round;transition:stroke-dasharray .35s ease}
+@media (prefers-reduced-motion:reduce){.arcv{transition:none}}
+.rtext{font-size:14px;color:var(--fg2)}
+.rtext b{color:var(--fg)}
+.warn{display:none;margin-top:10px;font-size:13px;padding:8px 12px;border-radius:8px;background:var(--orange-soft);color:var(--fg)}
+.lo{color:var(--teal)} .md{color:var(--orange)} .hi{color:var(--coral)}
+
+/* ficha */
+.card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card div{padding:14px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.card div:nth-child(3n){border-right:0}
+.card dt{margin:0 0 4px}
+.card dd{margin:0;font-size:14px}
+.lim{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 28px;margin:6px 0 0;padding:0;list-style:none}
+.lim li{font-size:14.5px;padding-left:16px;position:relative}
+.lim li::before{content:"";position:absolute;left:0;top:.65em;width:6px;height:6px;border-radius:50%;background:var(--orange)}
+
+.flow3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:6px}
+.vstats{display:grid;gap:12px}
+.vst{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.vst .row{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.vst .v{font-family:var(--f-disp);font-stretch:85%;font-weight:700;font-size:26px;font-variant-numeric:tabular-nums}
+.vst .s{font-size:13px;color:var(--fg2)}
+.cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.cbox{border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.cbox.hl{background:var(--navy);border-color:var(--navy);color:var(--on-navy)}
+.cbox.hl .s,.cbox.hl .lbl{color:var(--on-navy2)}
+.cbox .v{font-family:var(--f-disp);font-stretch:82%;font-weight:700;font-size:34px;line-height:1.05;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.cbox .s{font-size:13px;color:var(--fg2)}
+footer{background:var(--navy2);color:var(--on-navy2);font-size:13px}
+footer .in{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;padding-block:30px}
+footer b{color:var(--on-navy);font-family:var(--f-disp);font-weight:650}
+footer ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:3px}
+
+@media (max-width:980px){
+  .hero .hg{grid-template-columns:1fr;gap:26px;padding-block:34px 24px}
+  .exec{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .reco{grid-column:1/-1;margin:20px 0 0}
+  .flow,.branch{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .arrow{display:none}.branch .sp{display:none}.bl{text-align:left;grid-column:1/-1}
+  .two,.two.eq,.simw,.flow3{grid-template-columns:1fr}
+  .cmp{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .top .brand span{display:none}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi:nth-child(3){padding-left:0;border-left:0}
+  .kpi:nth-child(n+3){border-top:1px solid var(--navy-line)}
+  .exec{grid-template-columns:1fr}
+  .ef{padding:14px 0!important;border-left:0!important;border-top:1px solid var(--line)}
+  .ef:first-child{border-top:0}
+  .flow,.branch{grid-template-columns:1fr 1fr}
+  .res{grid-template-columns:1fr}
+  .card{grid-template-columns:1fr 1fr}
+  .card div:nth-child(3n){border-right:1px solid var(--line)}
+  .card div:nth-child(2n){border-right:0}
+  .lim{grid-template-columns:1fr}
+  footer .in{grid-template-columns:1fr}
+  .sh{grid-template-columns:1fr}.sn{grid-row:auto;padding:0}.sh p{grid-column:1}
+}
+</style>
+
+<div class="top g"><div class="in">
+  <a class="brand" href="#inicio"><span class="mark">G3</span><span>Rentabilidad · Modelo de riesgo</span></a>
+  <nav class="nav" id="nav" aria-label="Secciones">
+    <a href="#resumen">Resumen</a><a href="#arquitectura">Arquitectura</a><a href="#modelo">Modelo</a><a href="#riesgo">Riesgo</a><a href="#tope">Dentro del tope</a><a href="#prueba">Prueba 2014</a><a href="#limites">Límites</a><a href="#simulador">Simulador</a><a href="#confianza">Confianza</a><a href="#y2015">2015</a><a href="#ficha">Ficha</a>
+  </nav>
+</div></div>
+
+<header class="hero g" id="inicio"><div class="in hg">
+  <div>
+    <p class="eyebrow">Inteligencia de Negocios · Grupo 3 · Modelo predictivo</p>
+    <h1>El margen se rompe después del <em>20 %</em> de descuento</h1>
+    <p class="dek">Entrenamos un modelo con las ventas de 2011 a 2013 y lo evaluamos con 2014, un año que apartamos antes de entrenar para usarlo como examen. Confirma el tope de 20 %, señala qué productos y mercados pierden dinero aun dentro de ese límite y proyecta la ganancia de 2015.</p>
+  </div>
+  <div class="hchart">
+    <div class="cap"><span>Margen de ganancia por nivel de descuento, 2011–2014</span><span class="num">51,290 líneas</span></div>
+    <svg id="hc" viewBox="0 0 560 270" role="img" aria-label="Margen de ganancia por nivel de descuento"></svg>
+  </div>
+</div>
+<div class="in"><div class="kpis" id="kpis"></div></div>
+</header>
+
+<main class="g"><div class="in">
+
+<section class="sec" id="resumen">
+  <div class="sh"><span class="sn">01</span><h2>Resumen ejecutivo</h2><p>Tres resultados y lo que proponemos hacer con ellos.</p></div>
+  <div class="exec" id="exec"></div>
+</section>
+
+<section class="sec" id="arquitectura">
+  <div class="sh"><span class="sn">02</span><h2>De la base de datos al modelo</h2><p>El modelo es la última pieza de la solución de Inteligencia de Negocios del proyecto. Usa los mismos datos que el cubo, las tablas dinámicas y el tablero.</p></div>
+  <div class="flow">
+    <div class="node"><div class="k">Origen</div><div class="t">Superstore_Normalizado</div><div class="d">15 tablas relacionales, desde Global Superstore (Kaggle)</div><span class="arrow"></span></div>
+    <div class="node"><div class="k">ETL</div><div class="t">SSIS</div><div class="d">5 paquetes, uno por tabla, con carga repetible</div><span class="arrow"></span></div>
+    <div class="node"><div class="k">Almacén</div><div class="t">DataMart_Rentabilidad</div><div class="d">Modelo estrella: 1 tabla de hechos y 6 dimensiones</div><span class="arrow"></span></div>
+    <div class="node"><div class="k">Modelo analítico</div><div class="t">SSAS tabular</div><div class="d">20 medidas DAX y el escenario del tope</div><span class="arrow"></span></div>
+    <div class="node out"><div class="k">Consumo</div><div class="t">Excel y Power BI</div><div class="d">9 hojas dinámicas y 5 páginas de tablero en vivo</div></div>
+  </div>
+  <div class="branch">
+    <div class="bl sp">Desde el DataMart se exporta una consulta plana:</div>
+    <div class="node"><div class="k">Extracción</div><div class="t">CSV de 51,290 filas</div><div class="d">Hechos con los atributos de las dimensiones</div><span class="arrow"></span></div>
+    <div class="node"><div class="k">Aprendizaje</div><div class="t">Python y scikit-learn</div><div class="d">Modelos de pérdida y de margen</div><span class="arrow"></span></div>
+    <div class="node me"><div class="k">Resultado</div><div class="t">Esta página</div><div class="d">Prueba con 2014, proyección 2015 y simulador</div></div>
+  </div>
+</section>
+
+<section class="sec" id="modelo">
+  <div class="sh"><span class="sn">03</span><h2>¿Supera el modelo a una regla simple?</h2><p>La regla de referencia es “si el descuento supera 20 %, la línea pierde”. Todos se evaluaron con las 17,531 líneas de 2014.</p></div>
+  <p class="note" style="background:var(--sunk);border-radius:8px;padding:10px 14px;max-width:none"><b>¿Por qué se prueba con 2014 y no con 2015?</b> El CSV sí tiene 2014, pero esas ventas se apartaron antes de entrenar: el modelo aprendió solo con 2011–2013 y luego se le pidió adivinar 2014, cuyas respuestas ya conocemos. Así se mide qué tan bien acierta con datos que no vio. El pronóstico de Excel y Power BI es otro análisis: usa los cuatro años para proyectar las ventas totales de 2015, que todavía no existen.</p>
+  <div class="tw"><table id="tm"></table></div>
+  <p>Con las variables de la política (descuento, producto y mercado), el modelo empata con la regla en exactitud y solo ordena mejor el riesgo. El descuento pesa tanto que una regla simple basta para aplicar el tope.</p>
+  <p>Al agregar dos datos que se conocen al momento de vender, el precio de lista y el margen habitual de cada producto cuando se vende sin descuento, la exactitud sube a 95.1 % y el modelo detecta 89 de cada 100 ventas con pérdida, contra 82 de la regla. El simulador usa el modelo de tres variables porque habla en los términos de la política; el ampliado se usa para la proyección de 2015.</p>
+  <p class="note">Exactitud: aciertos sobre el total. Precisión: de las líneas marcadas como pérdida, cuántas lo son. Recall: de las que pierden, cuántas se detectan. AUC: capacidad de ordenar por riesgo (0.5 es azar; 1, perfecto). La ganancia nunca se usa como dato de entrada.</p>
+</section>
+
+<section class="sec" id="riesgo">
+  <div class="sh"><span class="sn">04</span><h2>Dónde empieza la pérdida</h2><p>Porcentaje de líneas con pérdida en cada nivel de descuento que aparece en los datos (niveles con al menos 100 líneas).</p></div>
+  <svg id="lc" viewBox="0 0 900 300" role="img" aria-label="Porcentaje de líneas con pérdida por nivel de descuento"></svg>
+  <div class="legend"><span><i style="background:var(--teal)"></i>Hasta 20 %</span><span><i style="background:var(--orange)"></i>21 % a 30 %</span><span><i style="background:var(--coral)"></i>Más de 30 %</span></div>
+  <p>Con descuentos de 1 % a 20 % pierde una de cada cinco líneas, pero el conjunto sigue dejando margen. En 25 % y 27 % la mitad pierde y el margen ronda cero. Desde 30 %, perder es lo normal, y desde 50 % pierden todas.</p>
+</section>
+
+<section class="sec" id="tope">
+  <div class="sh"><span class="sn">05</span><h2>Dentro del tope: quién pierde con descuento permitido</h2><p id="tl"></p></div>
+  <div class="two eq">
+    <div><h3>Todas las líneas</h3><div class="imp" id="i1"></div></div>
+    <div><h3>Solo descuentos de 1 % a 20 %</h3><div class="imp" id="i2"></div></div>
+  </div>
+  <p class="note">Importancia en 2014: cuánto empeora el AUC si se desordena cada variable.</p>
+  <p>Con todas las líneas, el descuento lo decide casi todo. Dentro del rango permitido, el descuento pesa lo mismo que la subcategoría y el mercado. Por eso el mapa de calor siguiente es la herramienta para vigilar las ventas que el tope deja pasar.</p>
+  <div style="display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-top:18px">
+    <h3 style="margin:0">Líneas con pérdida, descuento de 1 % a 20 %</h3>
+    <div class="scale"><span>0 %</span><span class="bar"></span><span>60 %</span></div>
+  </div>
+  <div class="tw heatwrap"><table class="heat" id="hm"></table></div>
+  <div class="hinfo" id="hinfo" aria-live="polite">Pasa el cursor o toca una celda para ver el detalle.</div>
+  <p class="note">Las celdas con menos de 30 líneas se omiten (—). En estos datos EMEA y África solo conceden 0 % o 60–70 % de descuento y Canadá nunca concede, así que no tienen ventas en este rango.</p>
+</section>
+
+<section class="sec" id="prueba">
+  <div class="sh"><span class="sn">06</span><h2>Prueba hacia atrás: si en 2014 hubiéramos aplicado el tope</h2><p>Ganancia real de las líneas de 2014 que quedan dentro de cada tope. No es una simulación de precios.</p></div>
+  <div class="two">
+    <svg id="bc" viewBox="0 0 560 250" role="img" aria-label="Ganancia retenida por escenario de tope en 2014"></svg>
+    <div>
+      <p style="margin-top:0" id="bt1"></p>
+      <p id="bt2"></p>
+    </div>
+  </div>
+  <div class="tw"><table id="tb"></table></div>
+  <p class="note">El tope por subcategoría usa límites calculados solo con 2011–2013. Las cifras no miden la reacción de los clientes: quien hoy compra con descuento alto podría comprar menos.</p>
+</section>
+
+<section class="sec" id="limites">
+  <div class="sh"><span class="sn">07</span><h2>Descuento máximo sugerido por subcategoría</h2><p>El descuento más alto que mantiene un margen de al menos 5 %, siempre que los niveles menores también lo mantengan (mínimo 30 líneas por nivel).</p></div>
+  <div class="caps" id="caps"></div>
+  <p class="note">El asterisco (*) marca límites que cambian entre el cálculo con 2011–2013 y el de todo el periodo; se toman como orientativos. En Tables ningún nivel de descuento llega a 5 % de margen.</p>
+</section>
+
+<section class="sec" id="simulador">
+  <div class="sh"><span class="sn">08</span><h2>Simulador de riesgo</h2><p>Elige un producto, un mercado y un descuento. El modelo responde con la probabilidad de que esa venta termine en pérdida.</p></div>
+  <div class="simw">
+    <div class="ctl">
+      <label for="ss">Subcategoría</label><select id="ss"></select>
+      <label for="sm">Mercado</label><select id="sm"></select>
+      <label for="sd">Descuento</label>
+      <div class="rng"><input type="range" id="sd" min="0" max="70" step="1" value="20"><output id="sdo" for="sd">20 %</output></div>
+      <div class="lbl" style="margin-top:14px">Casos para probar</div>
+      <div class="presets" id="pre"></div>
+    </div>
+    <div>
+      <div class="res">
+        <div class="gauge">
+          <svg viewBox="0 0 240 140" aria-hidden="true"><path class="arcbg" d="M 25 125 A 95 95 0 0 1 215 125" pathLength="100"/><path class="arcv" id="arc" d="M 25 125 A 95 95 0 0 1 215 125" pathLength="100" stroke-dasharray="0 100"/></svg>
+          <div class="val" aria-live="polite"><div class="pv" id="pv">—</div><div class="pl" id="pl"></div></div>
+        </div>
+        <div><p class="rtext" id="rt" style="margin:0"></p><div class="warn" id="sw"></div></div>
+      </div>
+      <svg id="sc" viewBox="0 0 640 230" role="img" aria-label="Probabilidad de pérdida según el descuento" style="margin-top:14px"></svg>
+      <div class="legend"><span><i style="background:var(--teal)"></i>Probabilidad de pérdida</span><span><i style="background:var(--orange)"></i>Descuento sugerido para la subcategoría</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="confianza">
+  <div class="sh"><span class="sn">09</span><h2>¿Se puede confiar en las probabilidades?</h2><p>Agrupamos las líneas de 2014 según la probabilidad que anunció el modelo y la comparamos con lo que realmente pasó.</p></div>
+  <div class="two">
+    <div class="tw" style="margin-top:0"><table id="tc"></table></div>
+    <div><svg id="rc" viewBox="0 0 300 300" role="img" aria-label="Probabilidad anunciada frente a pérdida real" style="max-width:340px;margin:0 auto"></svg>
+    <p class="note" style="text-align:center">Cada punto es un grupo; cuanto más cerca de la diagonal, mejor calibrado. El tamaño indica cuántas líneas tiene.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="y2015">
+  <div class="sh"><span class="sn">10</span><h2>2015: el modelo en acción</h2><p>El pronóstico de Excel dice cuánto se venderá en 2015. El modelo estima qué parte de esas ventas perderá dinero y cuánta ganancia dejará, con y sin el tope de 20 %. Son datos que todavía no existen: aquí el modelo trabaja de verdad.</p></div>
+  <div class="flow3">
+    <div class="node"><div class="k">Paso 1 · Excel</div><div class="t">Ventas 2015 pronosticadas</div><div class="d" id="y1"></div></div>
+    <div class="node"><div class="k">Paso 2 · Mezcla</div><div class="t">Productos, mercados y descuentos de 2014</div><div class="d" id="y2"></div></div>
+    <div class="node me"><div class="k">Paso 3 · Modelos</div><div class="t">Pérdida y margen de cada venta</div><div class="d">Entrenados con 2011–2014 y validados antes con 2014</div></div>
+  </div>
+  <h3 style="margin-top:24px">Antes de proyectar: ¿acertó la ganancia de 2014?</h3>
+  <div class="two">
+    <div>
+      <svg id="vc" viewBox="0 0 560 230" role="img" aria-label="Ganancia mensual de 2014, real frente a estimada"></svg>
+      <div class="legend"><span><i style="background:var(--fg3)"></i>Ganancia real 2014</span><span><i style="background:var(--teal)"></i>Estimada con datos hasta 2013</span></div>
+    </div>
+    <div class="vstats" id="vs"></div>
+  </div>
+  <h3 style="margin-top:26px">Ganancia proyectada para 2015</h3>
+  <div class="cmp" id="cmp"></div>
+  <svg id="yc" viewBox="0 0 900 270" role="img" aria-label="Ganancia mensual proyectada 2015 con y sin tope" style="margin-top:12px"></svg>
+  <div class="legend"><span><i style="background:var(--fg3)"></i>Sin política</span><span><i style="background:var(--teal)"></i>Con tope de 20 %</span></div>
+  <h3 style="margin-top:26px">Dos métodos, el mismo resultado</h3>
+  <p style="margin-top:0">El informe ya había proyectado 2015 con otro método: escalar la ganancia histórica al pronóstico de Excel y aplicar la fórmula del escenario del SSAS. El modelo llega por su cuenta, venta por venta, a casi la misma cifra.</p>
+  <div class="tw"><table id="ytab"></table></div>
+  <h3 style="margin-top:26px">Por mercado</h3>
+  <div class="tw"><table id="ymkt"></table></div>
+  <p class="note">* En EMEA y África el tope convierte descuentos de 60–70 % en 20 %, un nivel que esos mercados nunca usaron; esa parte es una extrapolación. La proyección supone que se vende el mismo volumen con el tope (techo); el informe muestra además el caso prudente, en que esas ventas se pierden: USD 913,650.</p>
+</section>
+
+<section class="sec" id="ficha">
+  <div class="sh"><span class="sn">11</span><h2>Ficha del modelo y límites</h2><p>Lo necesario para reproducirlo y saber hasta dónde llega.</p></div>
+  <dl class="card">
+    <div><dt class="lbl">Objetivo</dt><dd>Predecir si una línea de venta tendrá ganancia menor a cero</dd></div>
+    <div><dt class="lbl">Datos</dt><dd>DataMart_Rentabilidad, 51,290 líneas de 2011 a 2014</dd></div>
+    <div><dt class="lbl">Separación</dt><dd>Entrenamiento 2011–2013 (33,759) · Prueba 2014 (17,531)</dd></div>
+    <div><dt class="lbl">Variables</dt><dd>Descuento, cantidad, trimestre, subcategoría, mercado, segmento, envío y prioridad; el modelo ampliado suma precio de lista y margen base del producto</dd></div>
+    <div><dt class="lbl">Algoritmos</dt><dd>Árbol de decisión, regresión logística, gradient boosting de pérdida y regresión de margen</dd></div>
+    <div><dt class="lbl">Herramientas</dt><dd>Python, pandas y scikit-learn; cuaderno de Colab reproducible</dd></div>
+    <div><dt class="lbl">Resultado en 2014</dt><dd id="fr"></dd></div>
+    <div><dt class="lbl">Excluido a propósito</dt><dd>La ganancia de cada venta, para que el modelo no conozca la respuesta</dd></div>
+    <div><dt class="lbl">Versión</dt><dd>1.0 · noviembre de 2026</dd></div>
+  </dl>
+  <h3 style="margin-top:22px">Límites</h3>
+  <ul class="lim">
+    <li>Es una foto del modelo: no se conecta al DataMart ni se reentrena solo.</li>
+    <li>Se probó con un solo año (2014). La proyección 2015 supone la mezcla de productos de 2014 y el mismo volumen con el tope, por lo que es un techo.</li>
+    <li>Muestra asociaciones, no causas, y no incluye la reacción de la demanda.</li>
+    <li>Global Superstore es un dataset didáctico, no una empresa real.</li>
+    <li>EMEA, África y Canadá no tienen descuentos de 1 % a 20 %; el simulador avisa cuando extrapola y la proyección 2015 lo marca.</li>
+    <li>Complementa al SSIS, SSAS, Excel y Power BI; no los reemplaza.</li>
+  </ul>
+</section>
+
+</div></main>
+
+<footer class="g"><div class="in">
+  <div><b>Rentabilidad y política de descuentos</b><p style="margin:6px 0 0">Proyecto del curso Inteligencia de Negocios. Pregunta de negocio: ¿qué descuento máximo deberíamos permitir, y en qué productos y países? Fuente: DataMart_Rentabilidad, construido desde Global Superstore (Kaggle).</p></div>
+  <div><b>Grupo 3</b><ul><li>Castro Contreras Luis Alejandro</li><li>Espinoza Picón Diego Steven Martín</li><li>Ticlla Vento Esther Noemí</li><li>Alberto Luis Gil Sixi</li><li>Carrascal Castro Maria Priscila</li></ul></div>
+</div></footer>
+
+<script>
+const D={"n":{"total":51290,"train":33759,"test":17531,"loss_train":0.2438757072188157,"loss_test":0.24590725001426045},"metrics_all":{"base":{"acc":0.9323484113855456,"prec":0.8976838890302876,"rec":0.8181396427742983,"f1":0.8560679611650486,"auc":0.9711067560695978},"tree":{"acc":0.9312075751525869,"prec":0.8923426838514026,"rec":0.8190675017397355,"f1":0.8541364296081277,"auc":0.9775605520971402},"logit":{"acc":0.9322343277622497,"prec":0.904638507385333,"rec":0.8097889120853631,"f1":0.8545899632802938,"auc":0.9771075716309577},"gbm3":{"acc":0.9320632023273059,"prec":0.9028925619834711,"rec":0.8109487357921595,"f1":0.8544543565929366,"auc":0.9803591487981875},"tree3":{"acc":0.9314927842108265,"prec":0.9191374663072777,"rec":0.7909997680352586,"f1":0.850268046378257,"auc":0.9742962537167875}},"metrics_sub":{"n_test":3699,"loss_rate_test":0.2119491754528251,"logit_auc":0.6931037123254105,"gbm3_auc":0.7299898046697239,"top20_loss_rate":0.37468030690537085,"bottom80_loss_rate":0.16832362015769625},"imp_all":{"Descuento":0.4735514398483141,"Subcategoria":0.007937859769067024,"Mercado":0.008457546767566049},"imp_sub":{"Descuento":0.1080911978856723,"Subcategoria":0.14370904365176607,"Mercado":0.1353599432912102},"caps_sub_all":{"Accessories":0.2,"Appliances":0.2,"Art":0.2,"Binders":0.2,"Bookcases":0.15,"Chairs":0.1,"Copiers":0.2,"Envelopes":0.2,"Fasteners":0.2,"Furnishings":0.2,"Labels":0.2,"Machines":0.2,"Paper":0.2,"Phones":0.2,"Storage":0.17,"Supplies":0.1,"Tables":0.0},"caps_sub_train":{"Accessories":0.2,"Appliances":0.2,"Art":0.2,"Binders":0.2,"Bookcases":0.1,"Chairs":0.1,"Copiers":0.2,"Envelopes":0.2,"Fasteners":0.2,"Furnishings":0.2,"Labels":0.2,"Machines":0.17,"Paper":0.2,"Phones":0.2,"Storage":0.17,"Supplies":0.1,"Tables":0.2},"info_sub":{"Accessories":{"n":3075,"mlo":0.18201513725191354,"mhi":0.13594462316924333,"loss":0.2571428571428571,"nlo":174,"nhi":351},"Appliances":{"n":1755,"mlo":0.16888380268442296,"mhi":0.11055626295794416,"loss":0.1891891891891892,"nlo":234,"nhi":247},"Art":{"n":4883,"mlo":0.15613094785718648,"mhi":0.10699184116429838,"loss":0.12412587412587413,"nlo":209,"nhi":363},"Binders":{"n":6152,"mlo":0.16660693404977078,"mhi":0.30466197823767743,"loss":0.10638297872340426,"nlo":249,"nhi":879},"Bookcases":{"n":2411,"mlo":0.1675462406875737,"mhi":0.0464590758524163,"loss":0.2808988764044944,"nlo":424,"nhi":288},"Chairs":{"n":3434,"mlo":0.16057905087621246,"mhi":0.04217704282088138,"loss":0.2926208651399491,"nlo":509,"nhi":670},"Copiers":{"n":2223,"mlo":0.19800963536169966,"mhi":0.17315925129484414,"loss":0.15807560137457044,"nlo":710,"nhi":163},"Envelopes":{"n":2435,"mlo":0.15046996921515507,"mhi":0.24370417207408343,"loss":0.17627118644067796,"nlo":133,"nhi":162},"Fasteners":{"n":2420,"mlo":0.15156571812084438,"mhi":0.16078348593674469,"loss":0.23248407643312102,"nlo":150,"nhi":164},"Furnishings":{"n":3170,"mlo":0.17262090345209516,"mhi":0.07996337028879781,"loss":0.18243243243243243,"nlo":137,"nhi":307},"Labels":{"n":2606,"mlo":0.19505841544975347,"mhi":0.25344452252455774,"loss":0.14054054054054055,"nlo":175,"nhi":195},"Machines":{"n":1486,"mlo":0.1520636424550517,"mhi":0.10130879075003768,"loss":0.3022598870056497,"nlo":125,"nhi":229},"Paper":{"n":3538,"mlo":0.1907527032287562,"mhi":0.30825314150878474,"loss":0.07387862796833773,"nlo":178,"nhi":580},"Phones":{"n":3357,"mlo":0.18133865358744441,"mhi":0.1036145454373187,"loss":0.1855566700100301,"nlo":210,"nhi":787},"Storage":{"n":5059,"mlo":0.14909907095800357,"mhi":0.007630081742704148,"loss":0.34291581108829566,"nlo":900,"nhi":561},"Supplies":{"n":2425,"mlo":0.15302126723583898,"mhi":-0.12189494322918147,"loss":0.27960526315789475,"nlo":159,"nhi":145},"Tables":{"n":861,"mlo":null,"mhi":0.04574820425267941,"loss":0.3870967741935484,"nlo":3,"nhi":183}},"info_mkt":{"APAC":{"n":11002,"mlo":0.16344090040364773,"mhi":0.09849834844533245,"loss":0.2350597609561753},"Africa":{"n":4587,"mlo":0.13959405502596553,"mhi":null,"loss":0.23529411764705882},"Canada":{"n":384,"mlo":null,"mhi":null,"loss":NaN},"EMEA":{"n":5029,"mlo":null,"mhi":null,"loss":NaN},"EU":{"n":10000,"mlo":0.1664244412044762,"mhi":0.0898764523424074,"loss":0.27104451300132215},"LATAM":{"n":10294,"mlo":0.22179624561539432,"mhi":0.06749970929676079,"loss":0.2847222222222222},"US":{"n":9994,"mlo":0.16607100017880666,"mhi":0.11583134480880311,"loss":0.13752300815145937}},"bt_none":{"profit":504165.76529999997,"margin":0.11725151949661024,"loss_rate":0.24590725001426045},"bt_20":{"n_above":3929,"profit_above":-273789.3733,"loss_rate_above":0.8976838890302876,"n_within":13602,"profit_within":777955.1386,"loss_rate_within":0.057638582561388034,"margin_within":0.21349527558291878},"bt_25":{"n_above":3847,"profit_above":-273840.6755,"loss_rate_above":0.9061606446581753,"n_within":13684,"profit_within":778006.4408,"loss_rate_within":0.06028938906752412,"margin_within":0.21095459890945845},"bt_30":{"n_above":3598,"profit_above":-264572.51989999996,"loss_rate_above":0.9205113952195664,"n_within":13933,"profit_within":768738.2852,"loss_rate_within":0.07170027991100265,"margin_within":0.20363115147676158},"bt_sub":{"n_above":4423,"profit_above":-269365.9165,"loss_rate_above":0.8455799231290979,"n_within":13108,"profit_within":773531.6817999999,"loss_rate_within":0.04356118400976503,"margin_within":0.22282389448919832},"calibration":[{"bin":"[0.0, 0.1)","n":10891,"pred":0.002383782093677743,"real":0.0029382058580479293},{"bin":"[0.1, 0.2)","n":827,"pred":0.16263844194815896,"real":0.15598548972188633},{"bin":"[0.2, 0.3)","n":926,"pred":0.25831753784379463,"real":0.2818574514038877},{"bin":"[0.3, 0.5)","n":1015,"pred":0.3951286048487088,"real":0.387192118226601},{"bin":"[0.5, 0.7)","n":238,"pred":0.5651502181198066,"real":0.5630252100840336},{"bin":"[0.7, 0.9)","n":1272,"pred":0.8254628824957363,"real":0.8160377358490566},{"bin":"[0.9, 1.0)","n":2362,"pred":0.9880903398978854,"real":0.9839119390347163}],"sim":{"grid":[0,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7],"subs":["Accessories","Appliances","Art","Binders","Bookcases","Chairs","Copiers","Envelopes","Fasteners","Furnishings","Labels","Machines","Paper","Phones","Storage","Supplies","Tables"],"mkts":["APAC","Africa","Canada","EMEA","EU","LATAM","US"],"p":{"Accessories":{"APAC":[0.0,0.155,0.184,0.355,0.359,0.502,0.72,0.77,0.991,1.0,1.0],"Africa":[0.0,0.111,0.138,0.546,0.555,0.693,0.852,0.877,0.996,1.0,1.0],"Canada":[0.0,0.14,0.163,0.335,0.35,0.492,0.712,0.754,0.991,1.0,1.0],"EMEA":[0.0,0.053,0.06,0.198,0.268,0.494,0.713,0.778,0.996,1.0,1.0],"EU":[0.0,0.147,0.176,0.358,0.371,0.514,0.729,0.771,0.99,1.0,1.0],"LATAM":[0.0,0.135,0.156,0.331,0.347,0.51,0.727,0.758,0.991,1.0,1.0],"US":[0.0,0.065,0.073,0.217,0.294,0.658,0.864,0.9,0.996,1.0,1.0]},"Appliances":{"APAC":[0.0,0.161,0.186,0.26,0.263,0.529,0.765,0.806,0.994,1.0,1.0],"Africa":[0.0,0.09,0.107,0.354,0.357,0.656,0.846,0.88,0.997,1.0,1.0],"Canada":[0.0,0.14,0.164,0.24,0.242,0.516,0.755,0.796,0.994,1.0,1.0],"EMEA":[0.0,0.024,0.027,0.045,0.046,0.141,0.321,0.433,0.999,1.0,1.0],"EU":[0.0,0.214,0.248,0.329,0.332,0.551,0.78,0.822,0.995,1.0,1.0],"LATAM":[0.0,0.209,0.243,0.34,0.343,0.551,0.78,0.813,0.994,1.0,1.0],"US":[0.0,0.003,0.003,0.004,0.004,0.03,0.117,0.183,0.994,1.0,1.0]},"Art":{"APAC":[0.0,0.158,0.184,0.252,0.254,0.582,0.751,0.782,0.997,1.0,1.0],"Africa":[0.0,0.084,0.102,0.337,0.339,0.718,0.846,0.872,0.998,1.0,1.0],"Canada":[0.0,0.127,0.151,0.214,0.216,0.571,0.742,0.774,0.997,1.0,1.0],"EMEA":[0.0,0.022,0.025,0.037,0.037,0.16,0.292,0.354,0.999,1.0,1.0],"EU":[0.0,0.227,0.273,0.369,0.371,0.677,0.82,0.844,0.998,1.0,1.0],"LATAM":[0.0,0.219,0.256,0.346,0.349,0.596,0.762,0.786,0.997,1.0,1.0],"US":[0.0,0.002,0.002,0.003,0.003,0.036,0.107,0.142,0.996,1.0,1.0]},"Binders":{"APAC":[0.0,0.104,0.125,0.241,0.256,0.544,0.817,0.855,0.991,1.0,1.0],"Africa":[0.0,0.052,0.064,0.296,0.318,0.663,0.881,0.91,0.996,1.0,1.0],"Canada":[0.0,0.079,0.095,0.193,0.21,0.521,0.803,0.844,0.991,1.0,1.0],"EMEA":[0.0,0.012,0.014,0.026,0.028,0.107,0.311,0.463,0.998,1.0,1.0],"EU":[0.0,0.118,0.141,0.25,0.275,0.534,0.812,0.851,0.991,1.0,1.0],"LATAM":[0.0,0.147,0.175,0.323,0.349,0.564,0.829,0.861,0.992,1.0,1.0],"US":[0.0,0.001,0.001,0.002,0.002,0.022,0.11,0.197,0.992,1.0,1.0]},"Bookcases":{"APAC":[0.0,0.172,0.243,0.426,0.428,0.555,0.809,0.843,0.996,1.0,1.0],"Africa":[0.0,0.099,0.14,0.546,0.552,0.685,0.881,0.903,0.998,1.0,1.0],"Canada":[0.0,0.153,0.203,0.388,0.402,0.528,0.792,0.828,0.996,1.0,1.0],"EMEA":[0.0,0.059,0.071,0.219,0.296,0.552,0.807,0.865,0.998,1.0,1.0],"EU":[0.0,0.134,0.169,0.344,0.353,0.476,0.756,0.801,0.995,1.0,1.0],"LATAM":[0.0,0.154,0.198,0.39,0.404,0.561,0.813,0.842,0.997,1.0,1.0],"US":[0.0,0.128,0.157,0.383,0.485,0.81,0.94,0.96,0.999,1.0,1.0]},"Chairs":{"APAC":[0.0,0.182,0.222,0.404,0.408,0.534,0.81,0.865,0.996,1.0,1.0],"Africa":[0.0,0.117,0.148,0.566,0.574,0.693,0.894,0.913,0.998,1.0,1.0],"Canada":[0.0,0.155,0.187,0.373,0.402,0.527,0.806,0.838,0.996,1.0,1.0],"EMEA":[0.0,0.061,0.068,0.212,0.299,0.513,0.797,0.846,0.998,1.0,1.0],"EU":[0.0,0.161,0.192,0.389,0.402,0.527,0.806,0.838,0.996,1.0,1.0],"LATAM":[0.0,0.15,0.179,0.371,0.399,0.555,0.823,0.841,0.996,1.0,1.0],"US":[0.0,0.073,0.081,0.224,0.319,0.694,0.921,0.949,0.998,1.0,1.0]},"Copiers":{"APAC":[0.0,0.225,0.25,0.405,0.405,0.563,0.705,0.751,0.996,1.0,1.0],"Africa":[0.0,0.133,0.152,0.53,0.53,0.687,0.803,0.839,0.998,1.0,1.0],"Canada":[0.0,0.205,0.232,0.397,0.397,0.556,0.698,0.741,0.997,1.0,1.0],"EMEA":[0.0,0.037,0.039,0.081,0.081,0.145,0.238,0.302,0.999,1.0,1.0],"EU":[0.0,0.239,0.27,0.434,0.434,0.599,0.734,0.775,0.997,1.0,1.0],"LATAM":[0.0,0.21,0.238,0.405,0.405,0.586,0.724,0.758,0.997,1.0,1.0],"US":[0.0,0.005,0.005,0.009,0.009,0.034,0.086,0.118,0.997,1.0,1.0]},"Envelopes":{"APAC":[0.0,0.146,0.187,0.266,0.272,0.548,0.762,0.799,0.994,1.0,1.0],"Africa":[0.0,0.084,0.112,0.37,0.377,0.705,0.863,0.891,0.997,1.0,1.0],"Canada":[0.0,0.113,0.142,0.214,0.222,0.523,0.743,0.779,0.993,1.0,1.0],"EMEA":[0.0,0.022,0.025,0.043,0.046,0.158,0.331,0.469,0.998,1.0,1.0],"EU":[0.0,0.165,0.201,0.285,0.295,0.555,0.767,0.805,0.994,1.0,1.0],"LATAM":[0.0,0.187,0.224,0.331,0.342,0.532,0.75,0.78,0.992,1.0,1.0],"US":[0.0,0.002,0.002,0.004,0.004,0.044,0.149,0.248,0.995,1.0,1.0]},"Fasteners":{"APAC":[0.0,0.18,0.226,0.347,0.35,0.527,0.769,0.803,0.985,1.0,1.0],"Africa":[0.0,0.121,0.156,0.505,0.512,0.686,0.868,0.888,0.994,1.0,1.0],"Canada":[0.0,0.167,0.207,0.329,0.339,0.515,0.761,0.795,0.987,1.0,1.0],"EMEA":[0.0,0.064,0.074,0.184,0.245,0.506,0.754,0.809,0.994,1.0,1.0],"EU":[0.0,0.126,0.154,0.304,0.313,0.482,0.736,0.777,0.983,1.0,1.0],"LATAM":[0.0,0.175,0.215,0.348,0.359,0.549,0.785,0.811,0.988,1.0,1.0],"US":[0.0,0.033,0.038,0.092,0.129,0.601,0.868,0.899,0.996,1.0,1.0]},"Furnishings":{"APAC":[0.0,0.151,0.183,0.26,0.263,0.439,0.753,0.8,0.993,1.0,1.0],"Africa":[0.0,0.101,0.125,0.409,0.417,0.612,0.86,0.889,0.997,1.0,1.0],"Canada":[0.0,0.145,0.178,0.261,0.267,0.444,0.757,0.803,0.993,1.0,1.0],"EMEA":[0.0,0.054,0.061,0.137,0.188,0.429,0.746,0.813,0.997,1.0,1.0],"EU":[0.0,0.184,0.221,0.309,0.313,0.417,0.736,0.789,0.993,1.0,1.0],"LATAM":[0.0,0.199,0.242,0.343,0.35,0.489,0.789,0.825,0.995,1.0,1.0],"US":[0.0,0.037,0.042,0.09,0.128,0.515,0.858,0.897,0.996,1.0,1.0]},"Labels":{"APAC":[0.0,0.119,0.145,0.21,0.214,0.485,0.726,0.763,0.974,1.0,1.0],"Africa":[0.0,0.065,0.082,0.297,0.301,0.645,0.836,0.864,0.99,1.0,1.0],"Canada":[0.0,0.101,0.126,0.19,0.194,0.496,0.734,0.769,0.979,1.0,1.0],"EMEA":[0.0,0.021,0.024,0.04,0.042,0.153,0.338,0.445,0.996,1.0,1.0],"EU":[0.0,0.155,0.188,0.264,0.268,0.525,0.756,0.793,0.978,1.0,1.0],"LATAM":[0.0,0.193,0.235,0.334,0.338,0.546,0.772,0.798,0.984,1.0,1.0],"US":[0.0,0.002,0.003,0.004,0.004,0.049,0.174,0.259,0.99,1.0,1.0]},"Machines":{"APAC":[0.0,0.186,0.219,0.398,0.415,0.584,0.753,0.806,0.995,1.0,1.0],"Africa":[0.0,0.077,0.095,0.334,0.358,0.528,0.708,0.781,0.995,1.0,1.0],"Canada":[0.0,0.189,0.225,0.414,0.435,0.604,0.768,0.817,0.996,1.0,1.0],"EMEA":[0.0,0.001,0.001,0.003,0.003,0.007,0.014,0.041,0.983,1.0,1.0],"EU":[0.0,0.217,0.257,0.423,0.463,0.634,0.79,0.839,0.996,1.0,1.0],"LATAM":[0.0,0.199,0.237,0.427,0.458,0.643,0.796,0.836,0.997,1.0,1.0],"US":[0.0,0.005,0.006,0.019,0.021,0.085,0.227,0.485,0.997,1.0,1.0]},"Paper":{"APAC":[0.0,0.138,0.165,0.227,0.229,0.507,0.784,0.832,0.983,1.0,1.0],"Africa":[0.0,0.068,0.084,0.294,0.296,0.64,0.862,0.897,0.994,1.0,1.0],"Canada":[0.0,0.101,0.119,0.177,0.184,0.48,0.765,0.813,0.986,1.0,1.0],"EMEA":[0.0,0.017,0.019,0.029,0.031,0.116,0.316,0.409,0.997,1.0,1.0],"EU":[0.0,0.16,0.188,0.255,0.271,0.53,0.799,0.843,0.988,1.0,1.0],"LATAM":[0.0,0.19,0.221,0.311,0.321,0.533,0.801,0.839,0.99,1.0,1.0],"US":[0.0,0.002,0.002,0.003,0.003,0.024,0.112,0.165,0.987,1.0,1.0]},"Phones":{"APAC":[0.0,0.129,0.155,0.261,0.272,0.492,0.799,0.833,0.996,1.0,1.0],"Africa":[0.0,0.356,0.41,0.529,0.553,0.766,0.931,0.945,0.999,1.0,1.0],"Canada":[0.0,0.124,0.151,0.26,0.273,0.493,0.8,0.833,0.995,1.0,1.0],"EMEA":[0.0,0.005,0.005,0.016,0.022,0.08,0.265,0.352,0.997,1.0,1.0],"EU":[0.0,0.226,0.27,0.374,0.416,0.573,0.847,0.876,0.997,1.0,1.0],"LATAM":[0.0,0.195,0.236,0.358,0.39,0.57,0.845,0.868,0.997,1.0,1.0],"US":[0.0,0.022,0.025,0.064,0.089,0.462,0.837,0.884,0.997,1.0,1.0]},"Storage":{"APAC":[0.0,0.208,0.251,0.41,0.41,0.536,0.747,0.768,0.977,1.0,1.0],"Africa":[0.0,0.228,0.275,0.594,0.598,0.714,0.864,0.878,0.99,1.0,1.0],"Canada":[0.0,0.207,0.252,0.421,0.425,0.551,0.758,0.779,0.98,1.0,1.0],"EMEA":[0.0,0.651,0.682,0.867,0.904,0.958,0.983,0.987,0.999,1.0,1.0],"EU":[0.0,0.215,0.257,0.417,0.417,0.543,0.752,0.774,0.976,1.0,1.0],"LATAM":[0.0,0.205,0.248,0.414,0.419,0.576,0.776,0.79,0.98,1.0,1.0],"US":[0.0,0.194,0.219,0.424,0.518,0.802,0.918,0.934,0.993,1.0,1.0]},"Supplies":{"APAC":[0.0,0.151,0.172,0.324,0.326,0.465,0.752,0.799,0.992,1.0,1.0],"Africa":[0.0,0.103,0.121,0.494,0.5,0.644,0.863,0.891,0.996,1.0,1.0],"Canada":[0.0,0.145,0.167,0.329,0.334,0.474,0.759,0.804,0.992,1.0,1.0],"EMEA":[0.0,0.056,0.063,0.198,0.264,0.485,0.767,0.829,0.996,1.0,1.0],"EU":[0.0,0.159,0.183,0.341,0.344,0.485,0.766,0.812,0.991,1.0,1.0],"LATAM":[0.0,0.153,0.175,0.34,0.346,0.518,0.79,0.825,0.992,1.0,1.0],"US":[0.0,0.127,0.142,0.354,0.446,0.757,0.921,0.944,0.996,1.0,1.0]},"Tables":{"APAC":[0.0,0.104,0.119,0.29,0.292,0.407,0.718,0.756,0.987,1.0,1.0],"Africa":[0.0,0.074,0.086,0.456,0.465,0.605,0.851,0.875,0.995,1.0,1.0],"Canada":[0.0,0.106,0.123,0.305,0.308,0.425,0.733,0.768,0.989,1.0,1.0],"EMEA":[0.0,0.055,0.062,0.195,0.253,0.504,0.791,0.85,0.996,1.0,1.0],"EU":[0.0,0.113,0.128,0.3,0.305,0.438,0.744,0.786,0.982,1.0,1.0],"LATAM":[0.0,0.12,0.139,0.335,0.338,0.491,0.782,0.807,0.991,1.0,1.0],"US":[0.0,0.153,0.173,0.391,0.477,0.868,0.963,0.975,0.998,1.0,1.0]}}},"bands":[{"band":"0 %","n":29009,"loss":0.0,"gan":1770694.7015999998,"margin":0.2532309477995446},{"band":"1–10 %","n":4679,"loss":0.19256251335755503,"gan":338189.13840000005,"margin":0.17231524992619604},{"band":"11–20 %","n":6274,"loss":0.23318457124641376,"gan":173254.6311,"margin":0.09859355333456608},{"band":"21–30 %","n":967,"loss":0.6215098241985523,"gan":-21155.6097,"margin":-0.0553008817490683},{"band":"31–40 %","n":3400,"loss":0.8020588235294117,"gan":-166115.4206,"margin":-0.23685332183725616},{"band":"41–50 %","n":2789,"loss":0.9609178917174614,"gan":-214829.2877,"margin":-0.45256920999631955},{"band":"Más de 50 %","n":4172,"loss":1.0,"gan":-412581.4568,"margin":-1.1102102854529197}],"heat":[{"s":"Accessories","m":"APAC","n":151,"loss":0.1456953642384106},{"s":"Accessories","m":"EU","n":23,"loss":0.21739130434782608},{"s":"Accessories","m":"LATAM","n":47,"loss":0.3617021276595745},{"s":"Accessories","m":"US","n":304,"loss":0.2993421052631579},{"s":"Appliances","m":"APAC","n":173,"loss":0.24277456647398843},{"s":"Appliances","m":"EU","n":154,"loss":0.2662337662337662},{"s":"Appliances","m":"LATAM","n":26,"loss":0.3076923076923077},{"s":"Appliances","m":"US","n":128,"loss":0.0},{"s":"Art","m":"APAC","n":164,"loss":0.21341463414634146},{"s":"Art","m":"EU","n":75,"loss":0.29333333333333333},{"s":"Art","m":"LATAM","n":35,"loss":0.4},{"s":"Art","m":"US","n":298,"loss":0.0},{"s":"Binders","m":"APAC","n":420,"loss":0.20476190476190476},{"s":"Binders","m":"EU","n":65,"loss":0.13846153846153847},{"s":"Binders","m":"LATAM","n":70,"loss":0.35714285714285715},{"s":"Binders","m":"US","n":573,"loss":0.0},{"s":"Bookcases","m":"APAC","n":224,"loss":0.2767857142857143},{"s":"Bookcases","m":"EU","n":230,"loss":0.14782608695652175},{"s":"Bookcases","m":"LATAM","n":160,"loss":0.4},{"s":"Bookcases","m":"US","n":98,"loss":0.40816326530612246},{"s":"Chairs","m":"APAC","n":235,"loss":0.24680851063829787},{"s":"Chairs","m":"EU","n":281,"loss":0.2313167259786477},{"s":"Chairs","m":"LATAM","n":337,"loss":0.40059347181008903},{"s":"Chairs","m":"US","n":326,"loss":0.2668711656441718},{"s":"Copiers","m":"APAC","n":228,"loss":0.27631578947368424},{"s":"Copiers","m":"EU","n":147,"loss":0.4217687074829932},{"s":"Copiers","m":"LATAM","n":461,"loss":0.028199566160520606},{"s":"Copiers","m":"US","n":37,"loss":0.0},{"s":"Envelopes","m":"APAC","n":131,"loss":0.22137404580152673},{"s":"Envelopes","m":"EU","n":22,"loss":0.18181818181818182},{"s":"Envelopes","m":"LATAM","n":40,"loss":0.475},{"s":"Envelopes","m":"US","n":102,"loss":0.0},{"s":"Fasteners","m":"APAC","n":144,"loss":0.2916666666666667},{"s":"Fasteners","m":"EU","n":22,"loss":0.045454545454545456},{"s":"Fasteners","m":"LATAM","n":59,"loss":0.3050847457627119},{"s":"Fasteners","m":"US","n":89,"loss":0.1348314606741573},{"s":"Furnishings","m":"APAC","n":155,"loss":0.24516129032258063},{"s":"Furnishings","m":"EU","n":41,"loss":0.34146341463414637},{"s":"Furnishings","m":"US","n":248,"loss":0.11693548387096774},{"s":"Labels","m":"APAC","n":185,"loss":0.15135135135135136},{"s":"Labels","m":"EU","n":16,"loss":0.25},{"s":"Labels","m":"LATAM","n":44,"loss":0.45454545454545453},{"s":"Labels","m":"US","n":125,"loss":0.0},{"s":"Machines","m":"APAC","n":128,"loss":0.2890625},{"s":"Machines","m":"Africa","n":5,"loss":0.0},{"s":"Machines","m":"EU","n":188,"loss":0.3723404255319149},{"s":"Machines","m":"US","n":33,"loss":0.0},{"s":"Paper","m":"APAC","n":179,"loss":0.2011173184357542},{"s":"Paper","m":"EU","n":20,"loss":0.15},{"s":"Paper","m":"LATAM","n":46,"loss":0.3695652173913043},{"s":"Paper","m":"US","n":513,"loss":0.0},{"s":"Phones","m":"APAC","n":262,"loss":0.20229007633587787},{"s":"Phones","m":"Africa","n":6,"loss":0.5},{"s":"Phones","m":"EU","n":218,"loss":0.3165137614678899},{"s":"Phones","m":"LATAM","n":42,"loss":0.5},{"s":"Phones","m":"US","n":469,"loss":0.08315565031982942},{"s":"Storage","m":"APAC","n":311,"loss":0.3247588424437299},{"s":"Storage","m":"Africa","n":23,"loss":0.21739130434782608},{"s":"Storage","m":"EU","n":752,"loss":0.2779255319148936},{"s":"Storage","m":"LATAM","n":59,"loss":0.423728813559322},{"s":"Storage","m":"US","n":316,"loss":0.509493670886076},{"s":"Supplies","m":"APAC","n":170,"loss":0.20588235294117646},{"s":"Supplies","m":"EU","n":12,"loss":0.25},{"s":"Supplies","m":"LATAM","n":49,"loss":0.2857142857142857},{"s":"Supplies","m":"US","n":73,"loss":0.4520547945205479},{"s":"Tables","m":"APAC","n":3,"loss":0.0},{"s":"Tables","m":"EU","n":3,"loss":0.0},{"s":"Tables","m":"LATAM","n":109,"loss":0.3761467889908257},{"s":"Tables","m":"US","n":71,"loss":0.43661971830985913}],"loss_mkt_le20":{"APAC":0.2351,"Africa":0.2353,"EU":0.271,"LATAM":0.2847,"US":0.1375},"n_le20":10953,"loss_le20":0.215831279101616,"support_mkt":{"APAC":[4688,150,2203,817,93,586,62,713,449,18,0],"Africa":[3531,0,34,0,0,0,0,0,0,0,1022],"Canada":[384,0,0,0,0,0,0,0,0,0,0],"EMEA":[3420,0,0,0,0,0,0,8,0,1378,223],"EU":[6134,0,1737,407,125,0,51,274,1080,116,6],"LATAM":[6054,0,0,0,1164,0,0,2080,38,379,117],"US":[4798,0,94,52,3657,0,254,206,66,138,418]},"support_sub":{"Accessories":[1973,0,174,0,351,0,0,198,80,90,53],"Appliances":[967,0,234,100,147,0,0,87,50,62,41],"Art":[3385,0,209,30,333,98,0,164,193,236,177],"Binders":[3578,0,249,236,643,0,0,212,205,208,588],"Bookcases":[1127,69,355,52,236,0,37,196,78,112,75],"Chairs":[1336,0,509,0,670,236,158,244,60,167,54],"Copiers":[888,81,168,126,78,0,0,152,68,68,50],"Envelopes":[1582,0,133,20,142,0,0,193,77,88,61],"Fasteners":[1518,0,150,16,148,0,0,176,110,91,63],"Furnishings":[1825,0,137,0,307,180,51,314,51,241,60],"Labels":[1715,0,175,26,169,0,0,150,86,79,51],"Machines":[754,0,125,198,31,32,5,81,69,76,111],"Paper":[2269,0,178,21,559,0,0,157,91,79,55],"Phones":[1689,0,210,276,511,40,0,326,103,105,90],"Storage":[2611,0,900,152,409,0,0,384,176,224,140],"Supplies":[1584,0,159,23,122,0,0,162,84,75,59],"Tables":[208,0,3,0,183,0,116,85,52,28,58]},"levels":[{"d":0.0,"n":29470,"loss":0.00044112656939260264,"margin":0.25209817792446193,"gan":1828671.2645},{"d":0.07,"n":150,"loss":0.2,"margin":0.17389448841149396,"gan":21148.4992},{"d":0.1,"n":4068,"loss":0.21091445427728614,"margin":0.16400547256240147,"gan":259064.0763},{"d":0.15,"n":541,"loss":0.36968576709796674,"margin":0.08945499875818806,"gan":27375.898},{"d":0.17,"n":735,"loss":0.32108843537414966,"margin":0.11383649183894429,"gan":28163.0542},{"d":0.2,"n":5039,"loss":0.20877158166302837,"margin":0.09599656450208316,"gan":117120.40639999999},{"d":0.25,"n":198,"loss":0.494949494949495,"margin":0.009091858338975854,"gan":800.5867},{"d":0.27,"n":388,"loss":0.5077319587628866,"margin":-0.018747108216779936,"gan":-1675.0852},{"d":0.3,"n":340,"loss":0.8264705882352941,"margin":-0.1041953605319246,"gan":-19685.8387},{"d":0.35,"n":122,"loss":0.6885245901639344,"margin":-0.14805316987200465,"gan":-14169.6486},{"d":0.4,"n":3281,"loss":0.8101188661993295,"margin":-0.2615702428495573,"gan":-155178.8786},{"d":0.45,"n":327,"loss":0.9021406727828746,"margin":-0.40749695970113636,"gan":-13606.782},{"d":0.47,"n":725,"loss":0.9351724137931035,"margin":-0.37350398494493187,"gan":-31162.243},{"d":0.5,"n":1633,"loss":0.9895897121861604,"margin":-0.4894001755144123,"gan":-158629.8186},{"d":0.6,"n":2029,"loss":1.0,"margin":-0.890804368287879,"gan":-168860.0093},{"d":0.7,"n":1786,"loss":1.0,"margin":-1.3332438832380555,"gan":-186350.3819},{"d":0.8,"n":316,"loss":1.0,"margin":-1.8870967014433182,"gan":-38616.2231}],"totals":{"ventas":12642500.862699999,"ganancia":1467456.6963,"loss":0.24457009163579646,"high":-814681.7748},"y":{"amp":{"acc":0.9505447493012378,"prec":0.9082503556187767,"rec":0.8886569241475296,"f1":0.8983468167428773,"auc":0.9898804328791947},"val":{"r2_margin":0.9143247530060666,"r2_profit":0.867551001282254,"pred_total":499944.1355328395,"real_total":504165.76529999997,"pred_loss_lines":4324.687467870628,"real_loss_lines":4311},"val_month":{"real":[28001.0,19752.0,37357.0,23782.0,33954.0,43779.0,28036.0,53543.0,67979.0,58210.0,62857.0,46916.0],"pred":[27467.0,17624.0,38250.0,25650.0,31010.0,44060.0,26559.0,56304.0,66996.0,56510.0,61698.0,47816.0]},"val_tope":{"model":859374.1321527925,"ssas":848967.2050134421},"y2015":{"lines":20704.458462880386,"ventas_fc":5061399.96,"sin":{"ventas":5061399.960000001,"gan":592421.492299757,"loss_lines":5111.889822478158},"tope":{"ventas":5470000.927708382,"gan":1013461.1985120771,"loss_lines":2472.1471904368595,"ssas":999892.1846145878},"band_sin":[468090.62454772566,716752.3565403791],"margin_sin":0.11704696269443936,"margin_tope":0.18527623887198488},"y2015_month":{"fc":[334656.01,300155.38,346137.25,333959.32,397288.75,456262.69,351274.73,477782.0,513821.72,451821.7,537629.21,560611.2],"lo":[276431.99,235032.9,274756.29,256803.95,314741.35,368634.97,258826.97,380735.65,412368.09,346128.12,427843.59,446865.47],"hi":[392880.02,365277.87,417518.2,411114.68,479836.15,543890.41,443722.49,574828.34,615275.35,557515.29,647414.82,674356.93],"gan_sin":[39270.0,30435.0,48140.0,34866.0,44601.0,49461.0,37802.0,58541.0,72255.0,61691.0,61732.0,53628.0],"gan_tope":[69110.0,58597.0,72306.0,62076.0,81721.0,86947.0,71678.0,94240.0,108193.0,93920.0,104535.0,110140.0],"loss_sin":[0.2357,0.2634,0.2284,0.2698,0.2526,0.25,0.2503,0.2261,0.2236,0.2497,0.2476,0.2661],"loss_tope":[0.1104,0.1337,0.1147,0.1267,0.1163,0.1218,0.1057,0.1128,0.1093,0.129,0.1262,0.125]},"y2015_mkt":{"APAC":{"sin":159877.30856992604,"tope":259453.8292772245,"ventas":1431318.9288752947},"Africa":{"sin":44534.786191259154,"tope":79338.85072360281,"ventas":333886.2731697062},"Canada":{"sin":7426.404908285251,"tope":7426.404908285251,"ventas":27521.77458329839},"EMEA":{"sin":28260.322275466886,"tope":84460.74081637891,"ventas":364327.12371156854},"EU":{"sin":151089.7878913884,"tope":235938.10549701352,"ventas":1229958.272978541},"LATAM":{"sin":89174.28960235594,"tope":152151.94215408358,"ventas":816194.291016606},"US":{"sin":112058.5928610752,"tope":194691.32513548862,"ventas":858193.2956649853}},"y2015_sub":{"Accessories":{"sin":50816.90764851186,"tope":69698.07004092672,"lsin":0.21252340935915526,"ltope":0.11119895586541444},"Appliances":{"sin":61920.93797607852,"tope":89750.70579889002,"lsin":0.21552004840772515,"ltope":0.09473304623605443},"Art":{"sin":24063.700650199255,"tope":34460.312414037864,"lsin":0.19303953369904572,"ltope":0.0788928121467656},"Binders":{"sin":26146.06308391092,"tope":69162.46357767498,"lsin":0.25661097747797995,"ltope":0.0692798349315785},"Bookcases":{"sin":71487.12012224278,"tope":115742.40564588868,"lsin":0.3044434544068144,"ltope":0.18893865406597857},"Chairs":{"sin":53579.95005060537,"tope":91157.4874834069,"lsin":0.33537520301117923,"ltope":0.21091605528341278},"Copiers":{"sin":117885.30638219524,"tope":148789.94344574466,"lsin":0.2314722592818286,"ltope":0.1404658184393045},"Envelopes":{"sin":9691.462752699019,"tope":15667.950133151851,"lsin":0.23351222757993131,"ltope":0.09253252865205237},"Fasteners":{"sin":4201.479505552149,"tope":7676.03918886077,"lsin":0.2711777993634332,"ltope":0.11260166485047131},"Furnishings":{"sin":18090.6575429186,"tope":29754.513985996666,"lsin":0.23997981082925463,"ltope":0.12248774423220296},"Labels":{"sin":6067.866611325264,"tope":8104.453416243059,"lsin":0.19990120304652034,"ltope":0.08634969849625367},"Machines":{"sin":22479.23516016064,"tope":53918.037027738654,"lsin":0.2949564768250847,"ltope":0.15247313615544383},"Paper":{"sin":24314.363664055,"tope":28175.416661739728,"lsin":0.14300081693046207,"ltope":0.0610396671165473},"Phones":{"sin":81566.88475042654,"tope":122975.5089919224,"lsin":0.2337811006643936,"ltope":0.1120549779311205},"Storage":{"sin":44050.03101254947,"tope":75991.32959720904,"lsin":0.2694233776176502,"ltope":0.17079884486251076},"Supplies":{"sin":8817.983370294365,"tope":16297.50151130047,"lsin":0.24925063125439773,"ltope":0.10611001661545219},"Tables":{"sin":-32758.45798396809,"tope":36139.059591344696,"lsin":0.5811743178308751,"ltope":0.3024175176260813}},"informe":{"sin":587493.36,"tope100":1000847.69,"tope0":913649.57}}};
+const $=id=>document.getElementById(id);
+const pc=(x,d=1)=>(x<0?'−':'')+(Math.abs(x)*100).toFixed(d)+' %';
+const usd=x=>(x<0?'−':'')+'USD '+Math.abs(Math.round(x)).toLocaleString('en-US');
+const usdk=x=>(x<0?'−':'')+'USD '+Math.round(Math.abs(x)/1000).toLocaleString('en-US')+' mil';
+const nf=x=>Math.round(x).toLocaleString('en-US');
+const M=D.metrics_all;
+const col=d=>d<=.2001?'var(--teal)':d<=.3001?'var(--orange)':'var(--coral)';
+
+// KPIs
+M.amp=D.y.amp;const Y=D.y;
+$('kpis').innerHTML=[[nf(D.n.total),'líneas de venta analizadas'],[pc(M.amp.acc),'de exactitud del modelo al predecir 2014'],[pc(Y.val.pred_total/Y.val.real_total-1)+'','de error al estimar la ganancia total de 2014'],['USD '+(Y.y2015.tope.gan/1e6).toFixed(2)+' M','ganancia proyectada para 2015 con tope de 20 %']]
+ .map(([v,l])=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+
+// portada: margen por nivel
+(function(){
+ const L=D.levels.filter(l=>l.d<=.5),W=560,H=270,ml=44,mr=12,mt=16,mb=34;
+ const x=d=>ml+d/.5*(W-ml-mr),y0=.3,y1=-.5,y=v=>mt+(y0-Math.max(v,y1))/(y0-y1)*(H-mt-mb);
+ let s=`<rect x="${x(.2)}" y="${mt}" width="${x(.5)-x(.2)}" height="${H-mt-mb}" fill="rgba(240,124,98,.10)"/>`;
+ [.3,.2,.1,0,-.1,-.2,-.3,-.4,-.5].forEach(v=>{s+=`<line x1="${ml}" x2="${W-mr}" y1="${y(v)}" y2="${y(v)}" stroke="${v===0?'rgba(255,255,255,.55)':'rgba(255,255,255,.09)'}"/>`;if(Math.round(v*100)%20===0||v===.3)s+=`<text x="${ml-8}" y="${y(v)+4}" text-anchor="end">${Math.round(v*100)} %</text>`});
+ [0,10,20,30,40,50].forEach(v=>s+=`<text x="${x(v/100)}" y="${H-12}" text-anchor="middle">${v} %</text>`);
+ s+=`<line x1="${x(.2)}" x2="${x(.2)}" y1="${mt}" y2="${H-mb}" stroke="var(--orange)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+ s+=`<text x="${x(.2)+8}" y="${mt+14}" style="fill:var(--orange);font-weight:500">Tope 20 %</text>`;
+ s+=`<polyline points="${L.map(l=>x(l.d).toFixed(1)+','+y(l.margin).toFixed(1)).join(' ')}" fill="none" stroke="#FFFFFF" stroke-width="2"/>`;
+ L.forEach(l=>{const r=Math.max(3.5,Math.min(9,Math.sqrt(l.n)/9));s+=`<circle cx="${x(l.d)}" cy="${y(l.margin)}" r="${r}" fill="${l.margin>=0?'var(--teal)':'var(--coral)'}" stroke="var(--navy)" stroke-width="1.5"><title>${Math.round(l.d*100)} % de descuento: margen ${pc(l.margin)} en ${nf(l.n)} líneas</title></circle>`});
+ const a=L.find(l=>l.d===.2);s+=`<text x="${x(.2)-8}" y="${y(a.margin)-12}" text-anchor="end" style="fill:#fff">${pc(a.margin)}</text>`;
+ const b=L.find(l=>l.d===.5);s+=`<text x="${x(.5)-14}" y="${y(b.margin)+4}" text-anchor="end" style="fill:#fff">${pc(b.margin,0)}</text>`;
+ $('hc').innerHTML=s;
+})();
+
+// resumen
+$('exec').innerHTML=`
+<div class="ef"><div class="lbl">Hallazgo 1</div><div class="big">${pc(M.base.acc)}</div><p>La regla “descuento mayor a 20 % = pérdida” acierta así en 2014. El modelo ampliado llega a ${pc(M.amp.acc)} al sumar el precio y el margen habitual de cada producto. El descuento es la causa dominante.</p></div>
+<div class="ef"><div class="lbl">Hallazgo 2</div><div class="big">${pc(D.loss_le20)}</div><p>de las ventas con descuento de 1 % a 20 % igual pierde. El 20 % más riesgoso de ese grupo pierde ${pc(D.metrics_sub.top20_loss_rate,0)}, contra ${pc(D.metrics_sub.bottom80_loss_rate,0)} del resto.</p></div>
+<div class="ef"><div class="lbl">Hallazgo 3</div><div class="big">${pc(D.bt_20.margin_within,0)}</div><p>de margen en 2014 para las ventas dentro del tope de 20 %, contra ${pc(D.bt_none.margin,1)} del total real. Un tope de 25 % da lo mismo; uno de 30 % deja menos.</p></div>
+<div class="reco"><div class="lbl">Recomendación</div><ol>
+<li>Mantener el tope general de <b>20 %</b>.</li>
+<li>Usar límites menores en <b>Tables, Chairs, Supplies, Bookcases y Storage</b>.</li>
+<li>Revisar la política de <b>EMEA y África</b>, que saltan de 0 % a 60–70 % sin descuentos intermedios.</li>
+</ol></div>`;
+
+// tabla de modelos
+const rows=[['Regla: descuento > 20 %','base','referencia'],['Árbol de decisión','tree','profundidad 4'],['Regresión logística','logit','8 variables'],['Gradient boosting','gbm3','3 variables'],['Gradient boosting ampliado','amp','+ precio y margen del producto']];
+const mets=['acc','prec','rec','f1','auc'],best={};mets.forEach(m=>best[m]=Math.max(...rows.map(r=>M[r[1]][m])));
+$('tm').innerHTML='<thead><tr><th>Modelo</th><th>Exactitud</th><th>Precisión</th><th>Recall</th><th>F1</th><th>AUC</th></tr></thead><tbody>'+
+ rows.map(([n,k,t])=>`<tr class="${k==='base'?'base':''}"><td>${n}<span class="tag">${t}</span></td>${mets.map(m=>`<td class="m ${Math.abs(M[k][m]-best[m])<1e-9?'best':''}">${m==='auc'?M[k][m].toFixed(3):pc(M[k][m])}</td>`).join('')}</tr>`).join('')+'</tbody>';
+
+// pérdida por nivel
+(function(){
+ const L=D.levels,W=900,H=300,ml=46,mr=8,mt=18,mb=52,bw=(W-ml-mr)/L.length;
+ const y=v=>mt+(1-v)*(H-mt-mb);let s='';
+ [0,.25,.5,.75,1].forEach(v=>s+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${y(v)}" y2="${y(v)}"/><text x="${ml-8}" y="${y(v)+4}" text-anchor="end">${v*100} %</text>`);
+ L.forEach((l,i)=>{const x0=ml+i*bw+bw*.16,w=bw*.68,h=Math.max(1,(H-mt-mb)*l.loss);
+  s+=`<rect x="${x0}" y="${y(l.loss)}" width="${w}" height="${h-0}" rx="3" fill="${l.d===0?'var(--fg3)':col(l.d)}"><title>${Math.round(l.d*100)} %: pierde ${pc(l.loss)} de ${nf(l.n)} líneas</title></rect>`;
+  if(l.loss>.02)s+=`<text x="${x0+w/2}" y="${y(l.loss)-6}" text-anchor="middle" style="fill:var(--fg)">${Math.round(l.loss*100)}</text>`;
+  s+=`<text x="${x0+w/2}" y="${H-mb+18}" text-anchor="middle" style="fill:var(--fg)">${Math.round(l.d*100)}%</text><text x="${x0+w/2}" y="${H-mb+34}" text-anchor="middle" style="font-size:9.5px;fill:var(--fg3)">${l.n>=1000?(l.n/1000).toFixed(1)+'k':l.n}</text>`});
+ const xi=L.findIndex(l=>l.d===.25);const xs=ml+xi*bw;
+ s+=`<line x1="${xs}" x2="${xs}" y1="${mt-6}" y2="${H-mb}" stroke="var(--orange)" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${xs-6}" y="${mt+4}" text-anchor="end" style="fill:var(--orange)">tope 20 %</text>`;
+ s+=`<text x="${ml}" y="${H-4}" style="font-size:10px;fill:var(--fg3)">Nivel de descuento · líneas</text>`;
+ $('lc').innerHTML=s;
+})();
+
+// importancia
+$('tl').textContent=`Entre 2011 y 2014 hay ${nf(D.n_le20)} ventas con descuento de 1 % a 20 %, justo el rango que el tope permite. El ${pc(D.loss_le20)} termina en pérdida. Sobre ese grupo, el modelo logra un AUC de ${D.metrics_sub.gbm3_auc.toFixed(2)} en 2014: una señal real, aunque moderada.`;
+const vn={Descuento:'Descuento',Subcategoria:'Subcategoría',Mercado:'Mercado'};
+function imp(id,o){const mx=Math.max(...Object.values(o));$(id).innerHTML=Object.entries(o).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="irow"><span>${vn[k]}</span><div class="itr"><div class="ifl" style="width:${Math.max(1.5,v/mx*100)}%"></div></div><span class="num">${v.toFixed(3)}</span></div>`).join('')}
+imp('i1',D.imp_all);imp('i2',D.imp_sub);
+
+// mapa de calor
+const MK=['US','APAC','EU','LATAM','Africa','EMEA','Canada'],H={};D.heat.forEach(h=>H[h.s+'|'+h.m]=h);
+const wavg=s=>{const r=D.heat.filter(h=>h.s===s&&h.n>=30);return r.length?r.reduce((t,h)=>t+h.loss*h.n,0)/r.reduce((t,h)=>t+h.n,0):-1};
+const SS=D.sim.subs.slice().sort((a,b)=>wavg(b)-wavg(a));
+$('hm').innerHTML='<thead><tr><th></th>'+MK.map(m=>`<th>${m}</th>`).join('')+'</tr></thead><tbody>'+SS.map(s=>`<tr><td>${s}</td>`+MK.map(m=>{const h=H[s+'|'+m];
+ if(!h||h.n<30)return `<td class="na">—</td>`;const a=Math.min(h.loss/.6,1)*92;
+ return `<td class="c" tabindex="0" data-i="${s}|${m}" style="background:color-mix(in srgb,var(--coral) ${a.toFixed(0)}%,var(--surface));color:${h.loss>.36?'#fff':'var(--fg)'}">${Math.round(h.loss*100)} %</td>`}).join('')+'</tr>').join('')+'</tbody>';
+const showH=e=>{const t=e.target.closest('td.c');if(!t)return;const h=H[t.dataset.i];$('hinfo').innerHTML=`<b>${h.s} · ${h.m}</b>: pierde el ${pc(h.loss)} de ${nf(h.n)} ventas con descuento de 1 % a 20 %.`};
+$('hm').addEventListener('mouseover',showH);$('hm').addEventListener('focusin',showH);$('hm').addEventListener('click',showH);
+
+// prueba 2014
+const SC=[['Sin tope (real)',{profit_within:D.bt_none.profit,margin_within:D.bt_none.margin,loss_rate_within:D.bt_none.loss_rate,n_within:D.n.test}],['Tope 20 %',D.bt_20],['Tope 25 %',D.bt_25],['Tope 30 %',D.bt_30],['Por subcategoría',D.bt_sub]];
+(function(){const W=560,H=250,ml=128,mr=86,mt=8,rh=(H-mt-24)/SC.length,mx=850000,x=v=>ml+v/mx*(W-ml-mr);let s='';
+ [0,200000,400000,600000,800000].forEach(v=>s+=`<line class="gl" x1="${x(v)}" x2="${x(v)}" y1="${mt}" y2="${H-22}"/><text x="${x(v)}" y="${H-6}" text-anchor="middle">${v/1000}k</text>`);
+ SC.forEach(([n,b],i)=>{const yy=mt+i*rh+rh*.2,h=rh*.6,c=i===0?'var(--fg3)':i===1?'var(--teal)':'color-mix(in srgb,var(--teal) 45%,var(--sunk))';
+  s+=`<text x="${ml-10}" y="${yy+h/2+4}" text-anchor="end" style="fill:var(--fg);font-family:var(--f-body);font-size:12.5px;${i===1?'font-weight:600':''}">${n}</text><rect x="${ml}" y="${yy}" width="${x(b.profit_within)-ml}" height="${h}" rx="4" fill="${c}"/><text x="${x(b.profit_within)+8}" y="${yy+h/2+4}" style="fill:var(--fg)">${usdk(b.profit_within).replace('USD ','')}</text>`});
+ $('bc').innerHTML=s})();
+$('bt1').textContent=`En 2014 la empresa ganó ${usd(D.bt_none.profit)}. Las ${nf(D.bt_20.n_above)} ventas con descuento mayor a 20 % restaron ${usd(-D.bt_20.profit_above).replace('USD','USD')} de esa cifra; sin ellas, la ganancia de lo que queda sube a ${usd(D.bt_20.profit_within)} con margen de ${pc(D.bt_20.margin_within)}.`;
+$('bt2').textContent=`Los topes de 20 % y 25 % retienen prácticamente lo mismo y un tope de 30 % retiene menos (${usd(D.bt_30.profit_within)}). Los límites por subcategoría bajan las ventas con pérdida a ${pc(D.bt_sub.loss_rate_within)} (contra ${pc(D.bt_20.loss_rate_within)}) sin aumentar la ganancia total: sirven para controlar riesgo, mientras el tope general captura el beneficio.`;
+$('tb').innerHTML='<thead><tr><th>Escenario 2014</th><th>Ventas sobre el tope</th><th>Ganancia de esas ventas</th><th>Ventas que quedan</th><th>Ganancia de las que quedan</th><th>Margen</th><th>Ventas con pérdida</th></tr></thead><tbody>'+
+ SC.map(([n,b],i)=>`<tr class="${i===1?'base':''}"><td>${n}</td><td class="m">${i?nf(b.n_above):'—'}</td><td class="m">${i?usd(b.profit_above):'—'}</td><td class="m">${nf(b.n_within)}</td><td class="m">${usd(b.profit_within)}</td><td class="m">${pc(b.margin_within)}</td><td class="m">${pc(b.loss_rate_within)}</td></tr>`).join('')+'</tbody>';
+
+// límites
+$('caps').innerHTML=D.sim.subs.slice().sort((a,b)=>D.caps_sub_all[a]-D.caps_sub_all[b]||a.localeCompare(b)).map(s=>{const c=D.caps_sub_all[s],i=D.info_sub[s],k=c>=.2?'ok':c>0?'mid':'bad';
+ return `<div class="capc"><span class="n">${s}${D.caps_sub_train[s]!==c?' *':''}</span><span class="chip ${k}">${c>0?Math.round(c*100)+' %':'Ninguno'}</span><span class="s">${pc(i.loss,0)} pierde con 1–20 % · ${nf(i.n)} ventas</span></div>`}).join('');
+
+// calibración
+const CL=['0–10 %','10–20 %','20–30 %','30–50 %','50–70 %','70–90 %','90–100 %'];
+$('tc').innerHTML='<thead><tr><th>Anunciado</th><th>Ventas 2014</th><th>Promedio anunciado</th><th>Pérdida real</th></tr></thead><tbody>'+D.calibration.map((c,i)=>`<tr><td>${CL[i]}</td><td class="m">${nf(c.n)}</td><td class="m">${pc(c.pred)}</td><td class="m">${pc(c.real)}</td></tr>`).join('')+'</tbody>';
+(function(){const S=300,m=36,z=v=>m+v*(S-m-10),zy=v=>S-m-v*(S-m-10);let s='';
+ [0,.25,.5,.75,1].forEach(v=>{s+=`<line class="gl" x1="${z(0)}" x2="${z(1)}" y1="${zy(v)}" y2="${zy(v)}"/><text x="${z(0)-6}" y="${zy(v)+4}" text-anchor="end">${v*100}</text><text x="${z(v)}" y="${S-m+16}" text-anchor="middle">${v*100}</text>`});
+ s+=`<line x1="${z(0)}" y1="${zy(0)}" x2="${z(1)}" y2="${zy(1)}" stroke="var(--fg3)" stroke-dasharray="4 4"/>`;
+ D.calibration.forEach(c=>s+=`<circle cx="${z(c.pred)}" cy="${zy(c.real)}" r="${Math.max(4,Math.sqrt(c.n)/6)}" fill="color-mix(in srgb,var(--teal) 75%,transparent)" stroke="var(--teal)"><title>Anunciado ${pc(c.pred)} · real ${pc(c.real)} · ${nf(c.n)} ventas</title></circle>`);
+ s+=`<text x="${S/2+10}" y="${S-4}" text-anchor="middle">anunciado (%)</text><text x="10" y="${S/2}" text-anchor="middle" transform="rotate(-90 10 ${S/2})">real (%)</text>`;
+ $('rc').innerHTML=s})();
+$('fr').textContent=`Exactitud ${pc(M.amp.acc)} · AUC ${M.amp.auc.toFixed(3)} · ganancia total estimada con ${pc(Y.val.pred_total/Y.val.real_total-1)} de error`;
+
+// simulador
+const S=D.sim,G=S.grid;
+$('ss').innerHTML=S.subs.map(s=>`<option${s==='Tables'?' selected':''}>${s}</option>`).join('');
+$('sm').innerHTML=S.mkts.map(m=>`<option${m==='US'?' selected':''}>${m}</option>`).join('');
+const PR=[['Tables','US',30],['Storage','US',20],['Phones','APAC',10],['Binders','US',20],['Chairs','LATAM',20],['Copiers','EU',40]];
+$('pre').innerHTML=PR.map((p,i)=>`<button type="button" data-i="${i}">${p[0]} · ${p[1]} · ${p[2]} %</button>`).join('');
+$('pre').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const p=PR[+b.dataset.i];$('ss').value=p[0];$('sm').value=p[1];$('sd').value=p[2];sim()});
+function ip(a,d){d/=100;if(d<=G[0])return a[0];for(let i=1;i<G.length;i++)if(d<=G[i]){const t=(d-G[i-1])/(G[i]-G[i-1]);return a[i-1]+t*(a[i]-a[i-1])}return a[a.length-1]}
+function near(d){let k=0,b=9;G.forEach((x,i)=>{const e=Math.abs(x-d/100);if(e<b){b=e;k=i}});return k}
+function sim(){
+ const s=$('ss').value,m=$('sm').value,d=+$('sd').value,a=S.p[s][m],p=ip(a,d),cap=D.caps_sub_all[s];
+ $('sdo').textContent=d+' %';
+ const cls=p<.2?'lo':p<.5?'md':'hi',lab=p<.2?'Riesgo bajo':p<.5?'Riesgo medio':'Riesgo alto',cv=p<.2?'var(--teal)':p<.5?'var(--orange)':'var(--coral)';
+ $('pv').textContent=Math.round(p*100)+' %';$('pl').textContent=lab;$('pl').className='pl '+cls;
+ const arc=$('arc');arc.setAttribute('stroke-dasharray',`${(p*100).toFixed(1)} 100`);arc.style.stroke=cv;
+ const over=cap>0?d>cap*100+1e-9:d>0;
+ $('rt').innerHTML=`Una venta de <b>${s}</b> en <b>${m}</b> con <b>${d} %</b> de descuento tiene una probabilidad de <b>${Math.round(p*100)} %</b> de terminar en pérdida. ${cap>0?`El descuento sugerido para ${s} es <b>${Math.round(cap*100)} %</b>`:`Para ${s} ningún descuento mantiene 5 % de margen`}${over?', y este caso lo supera.':'.'}`;
+ const k=near(d),nm=D.support_mkt[m][k],ns=D.support_sub[s][k],w=$('sw');
+ if(nm<30){w.style.display='block';w.textContent=`En ${m} casi no hay ventas con descuento cercano a ${d} % (${nm} en todo el periodo). Esta cifra es una extrapolación y no es confiable.`}
+ else if(ns<30){w.style.display='block';w.textContent=`Hay pocas ventas de ${s} con descuento cercano a ${d} % (${ns}). Tómala como orientativa.`}else w.style.display='none';
+ const W=640,H=230,ml=44,mr=12,mt=12,mb=30,x=v=>ml+v/70*(W-ml-mr),y=v=>mt+(1-v)*(H-mt-mb);let g='';
+ [0,.25,.5,.75,1].forEach(v=>g+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${y(v)}" y2="${y(v)}"/><text x="${ml-8}" y="${y(v)+4}" text-anchor="end">${v*100} %</text>`);
+ [0,10,20,30,40,50,60,70].forEach(v=>g+=`<text x="${x(v)}" y="${H-8}" text-anchor="middle">${v} %</text>`);
+ if(cap>0)g+=`<line x1="${x(cap*100)}" x2="${x(cap*100)}" y1="${mt}" y2="${H-mb}" stroke="var(--orange)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+ let pts='',ar=`${x(0)},${y(0)} `;for(let v=0;v<=70;v++){const q=`${x(v).toFixed(1)},${y(ip(a,v)).toFixed(1)} `;pts+=q;ar+=q}ar+=`${x(70)},${y(0)}`;
+ g+=`<polygon points="${ar}" fill="color-mix(in srgb,var(--teal) 14%,transparent)"/><polyline points="${pts}" fill="none" stroke="var(--teal)" stroke-width="2.4"/>`;
+ g+=`<line x1="${x(d)}" x2="${x(d)}" y1="${y(p)}" y2="${H-mb}" stroke="${cv}" stroke-width="1"/><circle cx="${x(d)}" cy="${y(p)}" r="6.5" fill="${cv}" stroke="var(--surface)" stroke-width="2.5"/>`;
+ $('sc').innerHTML=g;
+}
+['ss','sm','sd'].forEach(i=>$(i).addEventListener('input',sim));sim();
+
+
+// 2015
+(function(){
+ const y=Y.y2015,v=Y.val,mo=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+ $('y1').textContent=`USD ${(y.ventas_fc/1e6).toFixed(2)} M en 12 meses, con banda de confianza de 95 %`;
+ $('y2').textContent=`Unas ${nf(y.lines)} ventas esperadas, con la mezcla más reciente`;
+ $('vs').innerHTML=`<div class="vst"><div class="lbl">Ganancia total 2014</div><div class="row"><span class="v">${usd(v.pred_total)}</span><span class="s">estimada</span></div><div class="row"><span class="s">Real: ${usd(v.real_total)}</span><span class="s" style="color:var(--teal);font-weight:600">${pc(v.pred_total/v.real_total-1)} de diferencia</span></div></div>
+ <div class="vst"><div class="lbl">Ventas con pérdida en 2014</div><div class="row"><span class="v">${nf(v.pred_loss_lines)}</span><span class="s">estimadas</span></div><div class="row"><span class="s">Reales: ${nf(v.real_loss_lines)}</span><span class="s" style="color:var(--teal);font-weight:600">${pc(v.pred_loss_lines/v.real_loss_lines-1)} de diferencia</span></div></div>
+ <div class="vst"><div class="lbl">Margen de cada venta</div><div class="row"><span class="v">R² ${v.r2_margin.toFixed(2)}</span><span class="s">explica el ${Math.round(v.r2_margin*100)} % de la variación</span></div></div>`;
+ (function(){const W=560,H=230,ml=48,mr=10,mt=12,mb=28,mx=80000,x=i=>ml+i*(W-ml-mr)/11,yy=q=>mt+(1-q/mx)*(H-mt-mb);let s='';
+  [0,20000,40000,60000,80000].forEach(q=>s+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${yy(q)}" y2="${yy(q)}"/><text x="${ml-8}" y="${yy(q)+4}" text-anchor="end">${q/1000}k</text>`);
+  mo.forEach((m,i)=>s+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${m}</text>`);
+  const L=(a,c,w,dash)=>`<polyline points="${a.map((q,i)=>x(i)+','+yy(q)).join(' ')}" fill="none" stroke="${c}" stroke-width="${w}" ${dash?'stroke-dasharray="5 4"':''}/>`;
+  s+=L(Y.val_month.real,'var(--fg3)',2.2,false)+L(Y.val_month.pred,'var(--teal)',2.4,true);
+  Y.val_month.pred.forEach((q,i)=>s+=`<circle cx="${x(i)}" cy="${yy(q)}" r="3.5" fill="var(--teal)"><title>${mo[i]} 2014: estimada ${usd(q)} · real ${usd(Y.val_month.real[i])}</title></circle>`);
+  $('vc').innerHTML=s})();
+ const inc=y.tope.gan-y.sin.gan;
+ $('cmp').innerHTML=`<div class="cbox"><div class="lbl">Sin política</div><div class="v">${usdk(y.sin.gan)}</div><div class="s">Margen ${pc(y.margin_sin)} · ${pc(y.sin.loss_lines/y.lines)} de ventas con pérdida. Con la banda del pronóstico: ${usdk(y.band_sin[0])} a ${usdk(y.band_sin[1])}.</div></div>
+ <div class="cbox hl"><div class="lbl">Con tope de 20 %</div><div class="v">${usdk(y.tope.gan)}</div><div class="s">Margen ${pc(y.margin_tope)} · ${pc(y.tope.loss_lines/y.lines)} de ventas con pérdida, si se mantiene el volumen.</div></div>
+ <div class="cbox"><div class="lbl">Diferencia</div><div class="v" style="color:var(--teal)">+${usdk(inc)}</div><div class="s">${pc(inc/y.sin.gan,0)} más de ganancia y unas ${nf(y.sin.loss_lines-y.tope.loss_lines)} ventas con pérdida menos.</div></div>`;
+ (function(){const W=900,H=270,ml=50,mr=8,mt=14,mb=30,mx=120000,cw=(W-ml-mr)/12,yy=q=>mt+(1-q/mx)*(H-mt-mb);let s='';
+  [0,30000,60000,90000,120000].forEach(q=>s+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${yy(q)}" y2="${yy(q)}"/><text x="${ml-8}" y="${yy(q)+4}" text-anchor="end">${q/1000}k</text>`);
+  const M2=Y.y2015_month;mo.forEach((m,i)=>{const x0=ml+i*cw,bw=cw*.32;
+   s+=`<rect x="${x0+cw*.16}" y="${yy(M2.gan_sin[i])}" width="${bw}" height="${yy(0)-yy(M2.gan_sin[i])}" rx="3" fill="var(--fg3)"><title>${m} 2015 sin política: ${usd(M2.gan_sin[i])}</title></rect>`;
+   s+=`<rect x="${x0+cw*.16+bw+3}" y="${yy(M2.gan_tope[i])}" width="${bw}" height="${yy(0)-yy(M2.gan_tope[i])}" rx="3" fill="var(--teal)"><title>${m} 2015 con tope: ${usd(M2.gan_tope[i])}</title></rect>`;
+   s+=`<text x="${x0+cw/2}" y="${H-8}" text-anchor="middle">${m}</text>`});
+  $('yc').innerHTML=s})();
+ const I=Y.informe,dif=(a,b)=>`<td class="m" style="color:var(--teal)">${(a/b-1>=0?'+':'')+pc(a/b-1)}</td>`;
+ $('ytab').innerHTML='<thead><tr><th>Escenario 2015</th><th>Informe (Excel + fórmula del SSAS)</th><th>Modelo predictivo</th><th>Diferencia</th></tr></thead><tbody>'+
+  `<tr><td>Sin política</td><td class="m">${usd(I.sin)}</td><td class="m">${usd(y.sin.gan)}</td>${dif(y.sin.gan,I.sin)}</tr>`+
+  `<tr class="base"><td>Tope de 20 %, mismo volumen</td><td class="m">${usd(I.tope100)}</td><td class="m">${usd(y.tope.gan)}</td>${dif(y.tope.gan,I.tope100)}</tr>`+
+  `<tr><td>Tope de 20 %, sin retener esas ventas</td><td class="m">${usd(I.tope0)}</td><td class="m">—</td><td class="m">—</td></tr></tbody>`;
+ const MKO=['APAC','EU','US','LATAM','EMEA','Africa','Canada'];
+ $('ymkt').innerHTML='<thead><tr><th>Mercado</th><th>Ventas 2015</th><th>Ganancia sin política</th><th>Ganancia con tope</th><th>Mejora</th></tr></thead><tbody>'+
+  MKO.map(m=>{const r=Y.y2015_mkt[m],x=['EMEA','Africa'].includes(m);return `<tr><td>${m}${x?' *':''}</td><td class="m">${usd(r.ventas)}</td><td class="m">${usd(r.sin)}</td><td class="m">${usd(r.tope)}</td><td class="m">${r.tope-r.sin>1?'+'+usd(r.tope-r.sin):'—'}</td></tr>`}).join('')+'</tbody>';
+})();
+
+// índice activo: la sección cuyo inicio ya pasó bajo la barra superior
+const links=[...document.querySelectorAll('#nav a')],nav=$('nav');
+const secs=links.map(l=>document.querySelector(l.getAttribute('href')));
+let curId='';
+function spy(){
+ const line=window.scrollY+110;let cur=null;
+ secs.forEach(s=>{if(s&&s.getBoundingClientRect().top+window.scrollY<=line)cur=s});
+ if(window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4)cur=secs[secs.length-1];
+ const id=cur?cur.id:'';if(id===curId)return;curId=id;
+ links.forEach(l=>{const on=l.getAttribute('href')==='#'+id;l.classList.toggle('on',on);
+  if(on){const lr=l.getBoundingClientRect(),nr=nav.getBoundingClientRect();if(lr.left<nr.left||lr.right>nr.right)nav.scrollLeft+=lr.left-nr.left-nr.width/2+lr.width/2}});
+}
+let tick=false;window.addEventListener('scroll',()=>{if(!tick){tick=true;requestAnimationFrame(()=>{spy();tick=false})}},{passive:true});
+window.addEventListener('resize',spy);spy();
+</script>
+
+</body>
+</html>

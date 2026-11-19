@@ -1,0 +1,8 @@
+// Consulta DAX de verificación (SSMS > Analysis Services > ModeloBI_Rentabilidad > Nueva consulta > DAX)
+EVALUATE ROW(
+    "Ventas",     [Ventas Totales],                                              -- 12,642,500.86
+    "Ganancia",   [Ganancia Total],                                              -- 1,467,456.70
+    "Pedidos",    [Pedidos],                                                     -- 25,035
+    "Simulada85", CALCULATE([Ganancia Simulada], 'Tope Descuento'[Tope] = 0.85), -- 1,467,456.70 (control)
+    "Simulada20", CALCULATE([Ganancia Simulada], 'Tope Descuento'[Tope] = 0.2)   -- 2,499,944.27
+)

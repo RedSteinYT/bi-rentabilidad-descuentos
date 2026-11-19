@@ -1,0 +1,16 @@
+# Archivos locales de Visual Studio / SSIS / SSAS
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.abf
+*.settings
+# Respaldos y datos pesados
+*.bak
+data/*.csv
+# Python
+__pycache__/
+.ipynb_checkpoints/
+# Office temporales
+~$*

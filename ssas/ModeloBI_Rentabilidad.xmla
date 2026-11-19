@@ -1,0 +1,737 @@
+{
+  "sequence": {
+    "operations": [
+      {
+        "createOrReplace": {
+          "object": {
+            "database": "ModeloBI_Rentabilidad"
+          },
+          "database": {
+            "name": "ModeloBI_Rentabilidad",
+            "compatibilityLevel": 1700,
+            "model": {
+              "culture": "es-PE",
+              "dataSources": [
+                {
+                  "type": "structured",
+                  "name": "SQL/localhost;DataMart_Rentabilidad",
+                  "connectionDetails": {
+                    "protocol": "tds",
+                    "address": {
+                      "server": "localhost",
+                      "database": "DataMart_Rentabilidad"
+                    },
+                    "authentication": null,
+                    "query": null
+                  },
+                  "credential": {
+                    "AuthenticationKind": "ServiceAccount",
+                    "EncryptConnection": false
+                  }
+                }
+              ],
+              "tables": [
+                {
+                  "name": "Dim_Banda_Descuento",
+                  "columns": [
+                    {
+                      "name": "BandaKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "BandaKey"
+                    },
+                    {
+                      "name": "Banda",
+                      "dataType": "string",
+                      "sourceColumn": "Banda",
+                      "sortByColumn": "Orden"
+                    },
+                    {
+                      "name": "Orden",
+                      "dataType": "int64",
+                      "sourceColumn": "Orden"
+                    }
+                  ],
+                  "partitions": [
+                    {
+                      "name": "Partition",
+                      "dataView": "full",
+                      "source": {
+                        "type": "m",
+                        "expression": [
+                          "let",
+                          "    Source = #\"SQL/localhost;DataMart_Rentabilidad\",",
+                          "    dbo_Dim_Banda_Descuento = Source{[Schema=\"dbo\",Item=\"Dim_Banda_Descuento\"]}[Data]",
+                          "in",
+                          "    dbo_Dim_Banda_Descuento"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "Dim_Envio",
+                  "columns": [
+                    {
+                      "name": "EnvioKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "EnvioKey"
+                    },
+                    {
+                      "name": "ModoEnvioID",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "ModoEnvioID"
+                    },
+                    {
+                      "name": "PrioridadID",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "PrioridadID"
+                    },
+                    {
+                      "name": "ModoEnvio",
+                      "dataType": "string",
+                      "sourceColumn": "ModoEnvio"
+                    },
+                    {
+                      "name": "Prioridad",
+                      "dataType": "string",
+                      "sourceColumn": "Prioridad"
+                    }
+                  ],
+                  "partitions": [
+                    {
+                      "name": "Partition",
+                      "dataView": "full",
+                      "source": {
+                        "type": "m",
+                        "expression": [
+                          "let",
+                          "    Source = #\"SQL/localhost;DataMart_Rentabilidad\",",
+                          "    dbo_Dim_Envio = Source{[Schema=\"dbo\",Item=\"Dim_Envio\"]}[Data]",
+                          "in",
+                          "    dbo_Dim_Envio"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "Dim_Cliente",
+                  "columns": [
+                    {
+                      "name": "ClienteKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "ClienteKey"
+                    },
+                    {
+                      "name": "ClienteID",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "ClienteID"
+                    },
+                    {
+                      "name": "CodigoCliente",
+                      "dataType": "string",
+                      "isHidden": true,
+                      "sourceColumn": "CodigoCliente"
+                    },
+                    {
+                      "name": "NombreCliente",
+                      "dataType": "string",
+                      "sourceColumn": "NombreCliente"
+                    },
+                    {
+                      "name": "Segmento",
+                      "dataType": "string",
+                      "sourceColumn": "Segmento"
+                    }
+                  ],
+                  "partitions": [
+                    {
+                      "name": "Partition",
+                      "dataView": "full",
+                      "source": {
+                        "type": "m",
+                        "expression": [
+                          "let",
+                          "    Source = #\"SQL/localhost;DataMart_Rentabilidad\",",
+                          "    dbo_Dim_Cliente = Source{[Schema=\"dbo\",Item=\"Dim_Cliente\"]}[Data]",
+                          "in",
+                          "    dbo_Dim_Cliente"
+                        ]
+                      }
+                    }
+                  ],
+                  "hierarchies": [
+                    {
+                      "name": "jerarquia cliente",
+                      "levels": [
+                        {
+                          "name": "Segmento",
+                          "ordinal": 0,
+                          "column": "Segmento"
+                        },
+                        {
+                          "name": "NombreCliente",
+                          "ordinal": 1,
+                          "column": "NombreCliente"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Dim_Tiempo",
+                  "dataCategory": "Time",
+                  "columns": [
+                    {
+                      "name": "TiempoKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "TiempoKey"
+                    },
+                    {
+                      "name": "Fecha",
+                      "dataType": "dateTime",
+                      "isKey": true,
+                      "sourceColumn": "Fecha"
+                    },
+                    {
+                      "name": "Dia",
+                      "dataType": "int64",
+                      "sourceColumn": "Dia"
+                    },
+                    {
+                      "name": "Mes",
+                      "dataType": "int64",
+                      "sourceColumn": "Mes"
+                    },
+                    {
+                      "name": "NombreMes",
+                      "dataType": "string",
+                      "sourceColumn": "NombreMes",
+                      "sortByColumn": "Mes"
+                    },
+                    {
+                      "name": "Trimestre",
+                      "dataType": "int64",
+                      "sourceColumn": "Trimestre"
+                    },
+                    {
+                      "name": "Anio",
+                      "dataType": "int64",
+                      "sourceColumn": "Anio"
+                    }
+                  ],
+                  "partitions": [
+                    {
+                      "name": "Partition",
+                      "dataView": "full",
+                      "source": {
+                        "type": "m",
+                        "expression": [
+                          "let",
+                          "    Source = #\"SQL/localhost;DataMart_Rentabilidad\",",
+                          "    dbo_Dim_Tiempo = Source{[Schema=\"dbo\",Item=\"Dim_Tiempo\"]}[Data]",
+                          "in",
+                          "    dbo_Dim_Tiempo"
+                        ]
+                      }
+                    }
+                  ],
+                  "hierarchies": [
+                    {
+                      "name": "jerarquia tiempo",
+                      "levels": [
+                        {
+                          "name": "Anio",
+                          "ordinal": 0,
+                          "column": "Anio"
+                        },
+                        {
+                          "name": "Trimestre",
+                          "ordinal": 1,
+                          "column": "Trimestre"
+                        },
+                        {
+                          "name": "NombreMes",
+                          "ordinal": 2,
+                          "column": "NombreMes"
+                        },
+                        {
+                          "name": "Fecha",
+                          "ordinal": 3,
+                          "column": "Fecha"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Fact_Ventas",
+                  "columns": [
+                    {
+                      "name": "VentaKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "VentaKey"
+                    },
+                    {
+                      "name": "TiempoKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "TiempoKey"
+                    },
+                    {
+                      "name": "ProductoKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "ProductoKey"
+                    },
+                    {
+                      "name": "ClienteKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "ClienteKey"
+                    },
+                    {
+                      "name": "GeografiaKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "GeografiaKey"
+                    },
+                    {
+                      "name": "EnvioKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "EnvioKey"
+                    },
+                    {
+                      "name": "BandaKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "BandaKey"
+                    },
+                    {
+                      "name": "DetallePedidoID",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "DetallePedidoID"
+                    },
+                    {
+                      "name": "CodigoPedido",
+                      "dataType": "string",
+                      "sourceColumn": "CodigoPedido"
+                    },
+                    {
+                      "name": "Ventas",
+                      "dataType": "double",
+                      "isHidden": true,
+                      "sourceColumn": "Ventas"
+                    },
+                    {
+                      "name": "Cantidad",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "Cantidad"
+                    },
+                    {
+                      "name": "Descuento",
+                      "dataType": "double",
+                      "isHidden": true,
+                      "sourceColumn": "Descuento"
+                    },
+                    {
+                      "name": "Ganancia",
+                      "dataType": "double",
+                      "isHidden": true,
+                      "sourceColumn": "Ganancia"
+                    },
+                    {
+                      "name": "CostoEnvio",
+                      "dataType": "double",
+                      "isHidden": true,
+                      "sourceColumn": "CostoEnvio"
+                    }
+                  ],
+                  "partitions": [
+                    {
+                      "name": "Partition",
+                      "dataView": "full",
+                      "source": {
+                        "type": "m",
+                        "expression": [
+                          "let",
+                          "    Source = #\"SQL/localhost;DataMart_Rentabilidad\",",
+                          "    dbo_Fact_Ventas = Source{[Schema=\"dbo\",Item=\"Fact_Ventas\"]}[Data]",
+                          "in",
+                          "    dbo_Fact_Ventas"
+                        ]
+                      }
+                    }
+                  ],
+                  "measures": [
+                    {
+                      "name": "Ventas Totales",
+                      "expression": " SUM(Fact_Ventas[Ventas])",
+                      "formatString": "\"$\" #,0.00;-\"$\" #,0.00;\"$\" #,0.00"
+                    },
+                    {
+                      "name": "Ganancia Total",
+                      "expression": " SUM(Fact_Ventas[Ganancia])",
+                      "formatString": "\"$\" #,0.00;-\"$\" #,0.00;\"$\" #,0.00"
+                    },
+                    {
+                      "name": "Margen %",
+                      "expression": " DIVIDE([Ganancia Total], [Ventas Totales])",
+                      "formatString": "0.00 %;-0.00 %;0.00 %"
+                    },
+                    {
+                      "name": "Cantidad Vendida",
+                      "expression": " SUM(Fact_Ventas[Cantidad])",
+                      "formatString": "0"
+                    },
+                    {
+                      "name": "Costo Envío Total",
+                      "expression": " SUM(Fact_Ventas[CostoEnvio])",
+                      "formatString": "\"$\" #,0.00;-\"$\" #,0.00;\"$\" #,0.00"
+                    },
+                    {
+                      "name": "Descuento Promedio",
+                      "expression": " AVERAGE(Fact_Ventas[Descuento])",
+                      "formatString": "0.00 %;-0.00 %;0.00 %"
+                    },
+                    {
+                      "name": "Líneas de Venta",
+                      "expression": " COUNTROWS(Fact_Ventas)",
+                      "formatString": "0"
+                    },
+                    {
+                      "name": "Pedidos",
+                      "expression": " DISTINCTCOUNT(Fact_Ventas[CodigoPedido])",
+                      "formatString": "0"
+                    },
+                    {
+                      "name": "Ticket Promedio",
+                      "expression": " DIVIDE([Ventas Totales], [Pedidos])",
+                      "formatString": "\"$\" #,0.00;-\"$\" #,0.00;\"$\" #,0.00"
+                    },
+                    {
+                      "name": "Líneas con Pérdida",
+                      "expression": " CALCULATE(COUNTROWS(Fact_Ventas), Fact_Ventas[Ganancia] < 0)",
+                      "formatString": "0"
+                    },
+                    {
+                      "name": "% Líneas con Pérdida",
+                      "expression": " DIVIDE([Líneas con Pérdida], [Líneas de Venta])",
+                      "formatString": "0.00 %;-0.00 %;0.00 %"
+                    },
+                    {
+                      "name": "Pérdida Total",
+                      "expression": " CALCULATE([Ganancia Total], Fact_Ventas[Ganancia] < 0)",
+                      "formatString": "\"$\" #,0.00;-\"$\" #,0.00;\"$\" #,0.00"
+                    },
+                    {
+                      "name": "Ganancia con Descuento Alto",
+                      "expression": " CALCULATE([Ganancia Total], Fact_Ventas[Descuento] > 0.2)",
+                      "formatString": "\"$\" #,0.00;-\"$\" #,0.00;\"$\" #,0.00"
+                    },
+                    {
+                      "name": "Ventas Año Anterior",
+                      "expression": " CALCULATE([Ventas Totales], SAMEPERIODLASTYEAR(Dim_Tiempo[Fecha]))",
+                      "formatString": "\"$\" #,0.00;-\"$\" #,0.00;\"$\" #,0.00"
+                    },
+                    {
+                      "name": "Crecimiento YoY",
+                      "expression": " DIVIDE([Ventas Totales] - [Ventas Año Anterior], [Ventas Año Anterior])",
+                      "formatString": "0.00 %;-0.00 %;0.00 %"
+                    },
+                    {
+                      "name": "Tope Seleccionado",
+                      "expression": " SELECTEDVALUE('Tope Descuento'[Tope], 1)",
+                      "formatString": "0.00 %;-0.00 %;0.00 %"
+                    },
+                    {
+                      "name": "Ventas Simuladas",
+                      "expression": " SUMX(Fact_Ventas, DIVIDE(Fact_Ventas[Ventas], 1 - Fact_Ventas[Descuento]) * (1 - MIN(Fact_Ventas[Descuento], [Tope Seleccionado])))",
+                      "formatString": "\"$\" #,0.00;-\"$\" #,0.00;\"$\" #,0.00"
+                    },
+                    {
+                      "name": "Ganancia Simulada",
+                      "expression": " [Ventas Simuladas] - SUMX(Fact_Ventas, Fact_Ventas[Ventas] - Fact_Ventas[Ganancia])",
+                      "formatString": "\"$\" #,0.00;-\"$\" #,0.00;\"$\" #,0.00"
+                    },
+                    {
+                      "name": "Margen Simulado",
+                      "expression": " DIVIDE([Ganancia Simulada], [Ventas Simuladas])",
+                      "formatString": "0.00 %;-0.00 %;0.00 %"
+                    },
+                    {
+                      "name": "Ganancia Recuperada",
+                      "expression": " [Ganancia Simulada] - [Ganancia Total]",
+                      "formatString": "\"$\" #,0.00;-\"$\" #,0.00;\"$\" #,0.00"
+                    }
+                  ]
+                },
+                {
+                  "name": "Dim_Producto",
+                  "columns": [
+                    {
+                      "name": "ProductoKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "ProductoKey"
+                    },
+                    {
+                      "name": "ProductoID",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "ProductoID"
+                    },
+                    {
+                      "name": "CodigoProducto",
+                      "dataType": "string",
+                      "isHidden": true,
+                      "sourceColumn": "CodigoProducto"
+                    },
+                    {
+                      "name": "NombreProducto",
+                      "dataType": "string",
+                      "sourceColumn": "NombreProducto"
+                    },
+                    {
+                      "name": "Categoria",
+                      "dataType": "string",
+                      "sourceColumn": "Categoria"
+                    },
+                    {
+                      "name": "Subcategoria",
+                      "dataType": "string",
+                      "sourceColumn": "Subcategoria"
+                    }
+                  ],
+                  "partitions": [
+                    {
+                      "name": "Partition",
+                      "dataView": "full",
+                      "source": {
+                        "type": "m",
+                        "expression": [
+                          "let",
+                          "    Source = #\"SQL/localhost;DataMart_Rentabilidad\",",
+                          "    dbo_Dim_Producto = Source{[Schema=\"dbo\",Item=\"Dim_Producto\"]}[Data]",
+                          "in",
+                          "    dbo_Dim_Producto"
+                        ]
+                      }
+                    }
+                  ],
+                  "hierarchies": [
+                    {
+                      "name": "jerarquia producto",
+                      "levels": [
+                        {
+                          "name": "Categoria",
+                          "ordinal": 0,
+                          "column": "Categoria"
+                        },
+                        {
+                          "name": "Subcategoria",
+                          "ordinal": 1,
+                          "column": "Subcategoria"
+                        },
+                        {
+                          "name": "NombreProducto",
+                          "ordinal": 2,
+                          "column": "NombreProducto"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Dim_Geografia",
+                  "columns": [
+                    {
+                      "name": "GeografiaKey",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "GeografiaKey"
+                    },
+                    {
+                      "name": "UbicacionID",
+                      "dataType": "int64",
+                      "isHidden": true,
+                      "sourceColumn": "UbicacionID"
+                    },
+                    {
+                      "name": "Ciudad",
+                      "dataType": "string",
+                      "sourceColumn": "Ciudad"
+                    },
+                    {
+                      "name": "Estado",
+                      "dataType": "string",
+                      "sourceColumn": "Estado"
+                    },
+                    {
+                      "name": "Pais",
+                      "dataType": "string",
+                      "sourceColumn": "Pais"
+                    },
+                    {
+                      "name": "Region",
+                      "dataType": "string",
+                      "sourceColumn": "Region"
+                    },
+                    {
+                      "name": "Mercado",
+                      "dataType": "string",
+                      "sourceColumn": "Mercado"
+                    }
+                  ],
+                  "partitions": [
+                    {
+                      "name": "Partition",
+                      "dataView": "full",
+                      "source": {
+                        "type": "m",
+                        "expression": [
+                          "let",
+                          "    Source = #\"SQL/localhost;DataMart_Rentabilidad\",",
+                          "    dbo_Dim_Geografia = Source{[Schema=\"dbo\",Item=\"Dim_Geografia\"]}[Data]",
+                          "in",
+                          "    dbo_Dim_Geografia"
+                        ]
+                      }
+                    }
+                  ],
+                  "hierarchies": [
+                    {
+                      "name": "jerarquia geografia",
+                      "levels": [
+                        {
+                          "name": "Mercado",
+                          "ordinal": 0,
+                          "column": "Mercado"
+                        },
+                        {
+                          "name": "Region",
+                          "ordinal": 1,
+                          "column": "Region"
+                        },
+                        {
+                          "name": "Pais",
+                          "ordinal": 2,
+                          "column": "Pais"
+                        },
+                        {
+                          "name": "Estado",
+                          "ordinal": 3,
+                          "column": "Estado"
+                        },
+                        {
+                          "name": "Ciudad",
+                          "ordinal": 4,
+                          "column": "Ciudad"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "Tope Descuento",
+                  "columns": [
+                    {
+                      "type": "calculatedTableColumn",
+                      "name": "Tope",
+                      "dataType": "double",
+                      "isNameInferred": true,
+                      "isDataTypeInferred": true,
+                      "sourceColumn": "[Tope]",
+                      "formatString": "0.00 %;-0.00 %;0.00 %"
+                    }
+                  ],
+                  "partitions": [
+                    {
+                      "name": "CalculatedTable 1",
+                      "source": {
+                        "type": "calculated",
+                        "expression": "SELECTCOLUMNS(GENERATESERIES(0, 17, 1), \"Tope\", [Value] / 20)"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "relationships": [
+                {
+                  "name": "e725fc3e-71d4-41cf-aced-3599830b96b4",
+                  "fromTable": "Fact_Ventas",
+                  "fromColumn": "BandaKey",
+                  "toTable": "Dim_Banda_Descuento",
+                  "toColumn": "BandaKey"
+                },
+                {
+                  "name": "fbb5fb1f-6d94-4942-a9a8-ba6badabf707",
+                  "fromTable": "Fact_Ventas",
+                  "fromColumn": "EnvioKey",
+                  "toTable": "Dim_Envio",
+                  "toColumn": "EnvioKey"
+                },
+                {
+                  "name": "74961aab-299c-4b32-837c-2f087c1a8fce",
+                  "fromTable": "Fact_Ventas",
+                  "fromColumn": "ClienteKey",
+                  "toTable": "Dim_Cliente",
+                  "toColumn": "ClienteKey"
+                },
+                {
+                  "name": "dc0189c4-8781-4121-8aeb-4013ef790556",
+                  "fromTable": "Fact_Ventas",
+                  "fromColumn": "TiempoKey",
+                  "toTable": "Dim_Tiempo",
+                  "toColumn": "TiempoKey"
+                },
+                {
+                  "name": "6ac2b504-b7dd-41ef-92ca-90cb3551704f",
+                  "fromTable": "Fact_Ventas",
+                  "fromColumn": "GeografiaKey",
+                  "toTable": "Dim_Geografia",
+                  "toColumn": "GeografiaKey"
+                },
+                {
+                  "name": "a489b26a-0761-46b6-9289-09689cb4cddf",
+                  "fromTable": "Fact_Ventas",
+                  "fromColumn": "ProductoKey",
+                  "toTable": "Dim_Producto",
+                  "toColumn": "ProductoKey"
+                }
+              ],
+              "annotations": [
+                {
+                  "name": "ClientCompatibilityLevel",
+                  "value": "800"
+                }
+              ]
+            },
+            "id": "SemanticModel"
+          }
+        }
+      },
+      {
+        "refresh": {
+          "type": "full",
+          "objects": [
+            {
+              "database": "ModeloBI_Rentabilidad"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
