@@ -96,7 +96,7 @@ flowchart LR
 
 - Castro Contreras Luis Alejandro ([@RedSteinYT](https://github.com/RedSteinYT))
 - Espinoza Picón Diego Steven Martín
-- Ticlla Vento Esther Noemí
+- Ticlla Vento Esther Noemí ([@estherticlla](https://github.com/estherticlla))
 - Alberto Luis Gil Sixi
 - Carrascal Castro Maria Priscila
 
