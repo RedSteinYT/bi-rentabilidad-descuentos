@@ -98,7 +98,7 @@ flowchart LR
 - Espinoza Picón Diego Steven Martín
 - Ticlla Vento Esther Noemí ([@estherticlla](https://github.com/estherticlla))
 - Alberto Luis Gil Sixi
-- Carrascal Castro Maria Priscila
+- Carrascal Castro Maria Priscila [(@priscilacc17)(https://github.com/priscilacc17)]
 
 Docente: Mg. Carlos Ernesto Chavez Herrera.
 
