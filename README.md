@@ -95,7 +95,7 @@ flowchart LR
 ## Equipo · Grupo 3
 
 - Castro Contreras Luis Alejandro ([@RedSteinYT](https://github.com/RedSteinYT))
-- Espinoza Picón Diego Steven Martín
+- Espinoza Picón Diego Steven Martín ([@DiesmEsp](https://github.com/DiesmEsp))
 - Ticlla Vento Esther Noemí ([@estherticlla](https://github.com/estherticlla))
 - Alberto Luis Gil Sixi
 - Carrascal Castro Maria Priscila ([@priscilacc17](https://github.com/priscilacc17))
